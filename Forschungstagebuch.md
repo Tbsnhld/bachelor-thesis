@@ -8,6 +8,8 @@ Bachelorarbeit Statistical Privacy
 - Implementierung -> Wie runterschreiben? Gibt es Beispiele für ähnliche Bachelorarbeiten am Institut?
 - Soll ich Zweitgutachter für die Bachelorarbeit aussuchen?
 
+- Bei Statistical Privacy werden für eine Anfrage von Anfang an nur Teile der Daten ausgegeben oder nur im Subsampling?
+
 
 # Einträge
 
@@ -46,5 +48,13 @@ Bachelorarbeit Statistical Privacy
 - Aufsetzen Latex Thesis Vorlage
 - Erstellen Git Projekt
 - Erstellen Forschungstagebuch
+    
+### 29.07-08.08.2025
+#### Thema: Recherche + Implementierung
+#### Inhalt: 
+    - Implementierung simple synthethische Datenbank
+    - Implementierung Noise Mechanismen: Gauss und Laplace
+    - Implementierung Angriff: Mittelwert finden
+    - Recherche: Max-liklihood, synthethische Datenbanken
     
 
