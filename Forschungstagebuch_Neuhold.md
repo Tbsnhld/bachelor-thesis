@@ -1,1 +1,0 @@
-/home/tobinhld/Tobi_Nextcloud/Obsidian Vault/Bachelorarbeit/1. Forschungstagebuch Tobias Neuhold Bachelorarbeit.md
