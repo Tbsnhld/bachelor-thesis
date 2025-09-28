@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install pandoc & LaTeX
         run: |
@@ -31,7 +31,7 @@ jobs:
           pandoc Forschungstagebuch.md -o Forschungstagebücher/Forschungstagebuch_aktuell.pdf
 
       - name: Upload PDF artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: diary-pdf
           path: Forschungstagebücher/Forschungstagebuch_aktuell.pdf
