@@ -4,11 +4,8 @@ Bachelorarbeit Statistical Privacy
 # Fragen
 
 
-- For [independent random variables](https://en.wikipedia.org/wiki/Independence_\(probability_theory\) "Independence (probability theory)"), f n ( y ; θ ) ![{\displaystyle f_{n}(\mathbf {y} ;\theta )}](https://wikimedia.org/api/rest_v1/media/math/render/svg/5a0e1848f54c87072bd9ebf8871ceeb19e8bb1e9) will be the product of univariate [density functions](https://en.wikipedia.org/wiki/Probability_density_function "Probability density function"): f n ( y ; θ ) = ∏ k = 1 n f k u n i v a r ( y k ; θ )   . ![{\displaystyle f_{n}(\mathbf {y} ;\theta )=\prod _{k=1}^{n}\,f_{k}^{\mathsf {univar}}(y_{k};\theta )~.}](https://wikimedia.org/api/rest_v1/media/math/render/svg/3bc35592aa22e723a2843a60a5caee69dbb05dcf)
-- Could it be relevant for me to combine the different mechanisms with one another? Or do I just test exclusively with one -> Combination possible
-- Improving SP with Subsampling bb![[Pasted image 20250908173643.png]]
-- Would property queries as per definition in "Statistical Privacy" allow queries to return the count of f.e. 0 and 1's in the database? Property query F is described by a subset $\mathbf{W_f \subseteq W}$. Correct answer for F given a database D = $I_1, ..., I_n$ is the value $y_F$ = $y_F(D)\;:= |\{j|I_j\in W_F\}|/n$ . And would it make sense for me to prevent the query? Currently I'd say as the size of the database (and possibly the sampling size) is given and the definition allows for ratios be returned it would be okay.
-- Would it be relevant to mix the queries within one experiment or choose them at random? 
+- Muss ich bei der Definition von Differential Privacy für Subsampling seperat von Noise definieren oder klappt es wenn ich von Queryantworten spreche?
+- Gerade implementiert unterscheiden sich die Datenbanken darin, dass eine Datenbank das kritische Element enthält und die andere nicht. Ist es relevant, dass die beiden gleich groß sind?
 
 # Einträge
 
@@ -70,41 +67,48 @@ Bachelorarbeit Statistical Privacy
 - Recherche: Max-liklihood, synthethische Datenbanken
 
 #### Datenbank: 
-A database consists of a sequence of $n$ entries $I_1, ..., I_n$. A database entry $I$ is made of $d$ attributes and can be viewed at as a vector of space $A = A^{(1)}\times ... \times A^{(d)}$. A attribute $a_i$ can take different values from $A^{(i)}$, formally $a_i \in A^{(i)}$. The attributes together make up an database entry $I = (a_1, ..., a_d)$. 
+A database consists of a sequence of $n$ entries $I_1, ..., I_n$. A database entry $I$ is made of $d$ attributes and can be viewed at as a vector of space $A = A^{(1)}\times ... \times A^{(d)}$. An attribute $a_i$ can take different values from $A^{(i)}$, formally $a_i \in A^{(i)}$. The attributes together make up an database entry $I = (a_1, ..., a_d)$. 
 For each database the only available information is the distribution of the attributes. 
 
+
 For testing purposes each database also includes an entry $I_{critical}$ which is a fixed entry and not included in the previous distribution. 
+
 #### Density function / Distribution $\mu$ 
-More specifically the distribution is $\mu = (\mu_1,...,\mu_n)$ for $W^n$ and $\mu_i$ is the marginal distribution for the attributes in $W^{(i)}$.
+More specifically the distribution is $\mu = (\mu_1,...,\mu_n)$ for $A^n$ and $\mu_i$ is the marginal distribution for the attributes in $A^{(i)}$.
 The fixed entry $I_{critical}$ is a special case of entry where $\mu_{j} \equiv a$, with $j$ being the index number of $I_{critical}$ and $a$ being a constant value of $supp(\mu_j)$.
 
+
+##### Neighborhood
+All neighboring databases $D$ and $D'$ are neighbors if there exists an index $j \in \{1,...,n\}$ such that
+$$I_j \neq I'_j\;and\;I_k=I'_k\;for\;all\;k\neq j$$
+That is, they differ in one entry, where $I_j = \alpha$ and $I'_j=\beta$ for $\alpha,\beta \in A$. 
 #### Binäre-Datenbank: 
 For a simple binary database a database entry $I$ consists only of one attribute a with $A = A^{(1)} := \{0,1\}$. The attribute $a$ is selected at random where $p = Pr(a=1)$ is the probability that $a = 1$.
 
 
-The critical entry the Database receives is a fixed additional entry $I_{critical}$, where the attribute $a \in A$ is not selected at random and instead is predefined. 
+The critical entry the Database receives is a fixed additional entry $I_{critical}$, where the attributes $\alpha,\;resp.\; \beta \in A$ are not selected at random and instead are predefined. 
 
 
 #### Query
- Given a database D with $I_1, ..., I_n$ entries, then a query $q$ is a measurable function which is part of the set $Q$ of queries the database can answer.  All possible queries $F$ can be described by $Q: A^n \rightarrow R$. Where $R$ is the set of possible answers.
+ Given a database D with $I_1, ..., I_n$ entries, then a query $q$ is a measurable function which is part of the set $Q$ of queries the database can answer. All possible queries $F$ can be described by $q: A^n \rightarrow R$. $R \in \mathbb{Q}$ is the answer to the query.
  
- This set of queries is limited to queries that won't provide specific information about an entry or rather where the order of entries is irrelevant for the answer of the query. This means a query must be a symmetric function. Information of a database can be prompted by asking for properties $U \subseteq A$. The probability that an entry $I_j$ has the property $U$ is defined by $\mu_j (U) := \sum_{a \in U} \mu_j(a)$. As trivial properties $\mu_j(U)=0\; or\; 1$ would be obsolete they aren't considered in the following. (And also aren't implemented in the query interface of the databases)
+ This set of queries is limited to queries that won't provide specific information about an entry or rather where the order of entries is irrelevant for the answer of the query. This means a query must be a symmetric function. Information of a database can be prompted by asking for properties $U \subseteq A$. ~ ~~The probability that an entry $I_j$ has the property $U$ is defined by $\mu_j (U) := \sum_{a \in U} \mu_j(a)$. As trivial properties $\mu_j(U)=0\; or\; 1$ would be obsolete they aren't considered in the following.~~ (And also aren't implemented in the query interface of the databases)
  Given a database $D$ of size $n$ with entries $I_1, ..., I_n$ a property query $q(D)$ would be a subset $A_q \subseteq A$. The answer to said query is ==$R_q(D) := |\{j|I_j \in A_q\}|$. For each entry it is checked whether $I_j$ is part of the subset of attributes $A_q$ and then the count of indexes, which satisfy this are returned.==  
- But as the database $D$ is not fixed but rather distributed the answer to our query needs to factor the distribution $\mu$ in. The answer is instead a random variable with Expectation $E[R_q(D)]=\sum_j \mu_j(A_F)$.   
+ But as the database $D$ is not fixed, but rather distributed, the answer to our query needs to factor in the distribution $\mu$. The answer is in this case a random variable with Expectation $E[R_q(D)]=\sum_j \mu_j(A_F)$.   
 
 #### Attack Model
-An Attack Model describes the method by which an adversary is deciding on whether the critical entry $I_{critical}$ is included in the result $R_q(D)$ returned by the query $q$.
+An Attack Model describes the method by which an adversary is deciding on whether the critical entry $I_{critical}$ has value $\alpha$ in the result $R_q(D)$ returned by the query $q$.
 
 ##### Maximum Likelihood 
 In this attack model, the adversary uses the a priori knowledge of the database distribution (and the size) to make the decision if the critical entry is contained in the query answer.
 
 
 #### Mechanisms
-To ensure Data Safety one of the following mechanisms $M$ can be used. The mechanism can be applied either before processing the query or after processing it, this varies for each applied mechanism.
+To ensure data privacy a mechanism $M$ is used. This mechanism can be described as a function which, given database $D$ distorts the answer answer to a query $q(D)$. It is denoted by $M(D,q)$ and returns a random variable on $\mathbb{Q}$. 
 
 
 #### Additive Noise
-If mechanism $M$ is a noise function $N$ defined by a random variable V that has a mean of 0 and is independent of the database distribution $\mu$ then $N(R_q(D)):= R_q(D) + V$ is the additive noise mechanism for query $q$.
+If mechanism $M$ is a noise function $N$ defined by a random variable V that has a mean of 0 and is independent of the database distribution $\mu$ then $N(D,q):= R_q(D) + V$ is the additive noise mechanism for query $q$.
 
 
 ##### Gaussian Noise
@@ -117,22 +121,22 @@ If $V =Lap(\psi)$ the mechanism is Laplace distributing with scaling factor $\ps
 #### Subsampling
 
 Another possible mechanism is subsampling, which answers a query by randomly taking a sample of size $m << n$, where $n$ is the size of entries. In this case the adversary knows the total size n of entries for a database as well a the sample size m. This is necessary in the case of counting queries, where only counting the subsampled values would provide incorrect results. 
-Given database $D$ and a subsampling mechanism $S$ then $R_q(S(D))$ is the query run on the subsampled database. 
+Given database $D$ and a subsampling mechanism $S$ then $S(D, q)$ is the query run on the subsampled database. 
 
 The probability for all entries is the same. Thus each entry influences the result of a query $R$ by the same amount.
 
 
 #### Monte-Carlo Simulation
-To gain insight in the successfulness of the Attack Model a Monte-Carlo simulation is run. In this case for each run a new database is generated from the same distribution with a separate last element, which is the critical element. The result of the Monte-Carlo Simulator is the success rate over all runs.  
+To gain insight in the successfulness of the Attack Model a Monte-Carlo simulation is run. In this case for each run a new database is generated from the same distribution with a separate last element, which is the critical element. The result of the Monte-Carlo Simulator is the success rate over all runs.
 
 #### Privacy
 
-Q: Muss ich Differential Privacy für Subsampling seperat von Noise definieren?
+
 
 ###### Differential Privacy
 The setting that an adversary knows all entries $I_1,...,I_n$ except for the critical entry $I_{critical}$ of a Database $D$ has been described by Differential Privacy. 
-The answer to a query $q$ is ($\epsilon, \delta$)-differential private for the Databases $D\;\in\;A^n$ and $D'\;\in\;A^n$ where $D=(I_1,...,I_n,I_{critical})$ and $D'=(I_1,...,I_n)$ and $S \subseteq R$ if
-$$\mathbb{P}[q(D)\in S]\leq e^{\epsilon}\mathbb{P}[q(D')\in S] + \delta $$.
+The answer to a mechanism $M$ applied to a query $q$ is ($\epsilon, \delta$)-differential private for all Databases $D\;\in\;A^n$ and $D'\;\in\;A^n$ where $D=(I_1,...,I_n,I_{critical}=\alpha)$ and $D'=(I_1,...,I_n,I_{critical}=\beta)$ and $S \subseteq R$ if
+$$\mathbb{P}[M(q,D)\in S]\leq e^{\epsilon}\mathbb{P}[M(q,D')\in S] + \delta $$.
 
 
 
