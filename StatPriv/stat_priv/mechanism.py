@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty, property
 class Mechanism(ABC):
-    @abstractmethod:
+    @abstractmethod
     def apply_mechanism(self, data=None, result=None):
         pass
 
@@ -27,9 +27,6 @@ class AdditiveNoise(Mechanism):
     @abstractmethod
     def size(self):
         pass
-
-
-    
 
 class GaussianNoise(AdditiveNoise):
     def apply_mechanism(self, data=None, result):

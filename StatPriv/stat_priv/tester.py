@@ -1,3 +1,6 @@
 class Tester:
-    def construct(builder):
+    def construct(self, builder):
+        builder.buildDatabase();
+        builder.buildAttackModel();
+        builder.buildMechanism();
 

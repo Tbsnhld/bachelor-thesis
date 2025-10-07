@@ -2,8 +2,9 @@ import numpy as np
 from numpy.random import normal
 
 class Database:
-    def __init__(self, seed=None)-> None:
-        self.rng = np.random.default_rng(seed)
+    def __init__(self, config)-> None:
+        self.rng = np.random.default_rng(config.seed)
+        self.generate_data(config.size, config.probability)
 
     def generate_data(self, n, p):
         self.propability = p
