@@ -1,28 +1,16 @@
 from abc import ABC, abstractmethod
+from config import Config
 class AttackModel(ABC):
-   @property
    @abstractmethod
-   def density_function(self):
-       pass
-
-   @density_function.setter
-   @abstractmethod
-   def density_function(self, mu):
-       pass
-
-   @abstractmethod
-   def run(self):
+   def run(self)-> bool:
        pass
 
 
 class MaximumLikelihood(AttackModel):
-    @property
-    def density_function(self):
-        return super().density_function
-    
-    @density_function.setter
-    def density_function(self, mu):
-        return super().density_function
+    def __init__(self, database_config: Config):
+        self.database_config = database_config
 
-    def run(self):
-        pass
+    def run(self, mechanismed_data) -> bool:
+        size = self.database_config.size
+        probability = self.database_config.probability 
+        return True

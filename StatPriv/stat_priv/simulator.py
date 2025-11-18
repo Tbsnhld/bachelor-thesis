@@ -1,12 +1,7 @@
 from abc import ABC, abstractmethod
 class Simulator(ABC):
-    @property
     @abstractmethod
-    def experiment(self):
-        pass
-
-    @abstractmethod
-    def run_simulation(self, attack_model) -> float:
+    def run_simulation(self) -> float:
        pass 
 
     @abstractmethod
@@ -22,26 +17,25 @@ class Simulator(ABC):
         pass
     
 class MonteCarlo(Simulator):
-    def __init__(self, experiment):
-       self.n = n 
-       self._experiment = experiment
-
-    @property
-    def experiment(self):
-        return self._experiment
+    def __init__(self, count, experiment):
+       self.n = count 
+       self.experiment = experiment
+       self.observers = []
 
     # returns the approximated value 
-    def run_simulation(self, attack_model):
+    def run_simulation(self):
         sum = 0
         for _ in range(self.n):
-            sum = sum + attack_model.run();
+            sum = sum + self.experiment.run();
+            self.notify()
         return sum / self.n
 
     def add_observer(self, observer):
-        return super().add_observer(observer)
+        self.observers.append(observer)
 
     def remove_observer(self, observer):
-        return super().remove_observer(observer)
+        self.observers.remove(observer)
 
     def notify(self):
-        return super().notify()
+        for observer in self.observers:
+            observer.update()
