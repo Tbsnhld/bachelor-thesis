@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 class Simulator(ABC):
     @abstractmethod
-    def run_simulation(self) -> float:
+    def run_simulation(self):
        pass 
 
     @abstractmethod
@@ -13,7 +13,7 @@ class Simulator(ABC):
         pass
 
     @abstractmethod
-    def notify(self):
+    def notify(self, info):
         pass
     
 class MonteCarlo(Simulator):
@@ -21,14 +21,17 @@ class MonteCarlo(Simulator):
        self.n = count 
        self.experiment = experiment
        self.observers = []
+       self.probabilities = experiment.config.probability
 
     # returns the approximated value 
     def run_simulation(self):
-        sum = 0
-        for _ in range(self.n):
-            sum = sum + self.experiment.run();
-            self.notify()
-        return sum / self.n
+
+        for i in range(self.n):
+            turnout = self.experiment.run()
+            print(i)
+            self.notify(turnout)
+        self.finalize()
+        
 
     def add_observer(self, observer):
         self.observers.append(observer)
@@ -36,6 +39,11 @@ class MonteCarlo(Simulator):
     def remove_observer(self, observer):
         self.observers.remove(observer)
 
-    def notify(self):
+    def notify(self, info):
         for observer in self.observers:
-            observer.update()
+            observer.update(info)
+
+    def finalize(self):
+        for observer in self.observers:
+            observer.finalize()
+

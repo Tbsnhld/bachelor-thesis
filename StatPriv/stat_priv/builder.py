@@ -7,7 +7,7 @@ from query import AverageQuery, Query, SumQuery
 
 class Builder(ABC):
     @abstractmethod
-    def withDatabase(self, distribution, datasource, size, seed=None):
+    def withDatabase(self, distribution, query, datasource, size, added_value, seed=None):
         pass
 
     @abstractmethod
@@ -19,7 +19,7 @@ class Builder(ABC):
         pass
 
     @abstractmethod
-    def buildExperiment(self):
+    def getExperiment(self):
         pass
 
 
@@ -27,26 +27,19 @@ class ExperimentBuilder(Builder):
     experiment: Experiment
 
     def __init__(self):
-        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None) 
+        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_value = None) 
         self.experiment = Experiment()
 
-    def withDatabase(self, distribution, datasource, size, seed=None):
+    def withDatabase(self, distribution, query, datasource, size, added_value, seed=None):
         self._database_config.probability = distribution 
         self._database_config.datasource = datasource
+        self._database_config.query = self.generate_Query(query) 
         self._database_config.size = size
         self._database_config.seed = seed 
+        self._database_config.added_value = added_value
         self.experiment.set_database_config(self._database_config)
         return self
 
-    def with_Query(self, query_choice:str):
-        if query_choice == "Average":
-            query = AverageQuery()
-        elif query_choice ==  "Sum":
-            query = SumQuery()
-        else:
-            raise ValueError(f"Wrong query type: {query_choice}")
-        self._database_config.query = query
-        return self 
 
     def withAttackModel(self, strategy):
         if self._database_config == None:
@@ -71,7 +64,16 @@ class ExperimentBuilder(Builder):
             raise ValueError(f"Unknown or not implemented mechanism type: {mechanism_name}")
         return self
 
+    def generate_Query(self, query_choice:str):
+        if query_choice == "Average":
+            query = AverageQuery()
+        elif query_choice ==  "Sum":
+            query = SumQuery()
+        else:
+            raise ValueError(f"Wrong query type: {query_choice}")
+        return query 
 
-    def buildExperiment(self):
-        pass
+
+    def getExperiment(self):
+        return self.experiment
 

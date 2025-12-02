@@ -8,7 +8,7 @@ class Mechanism(ABC):
         pass
 
     @abstractmethod
-    def apply_mechanism(self,data, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
+    def apply_mechanism(self, data, datasize, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
         pass
 
 class Subsampling(Mechanism):
@@ -17,7 +17,7 @@ class Subsampling(Mechanism):
         pass
 
     @abstractmethod
-    def apply_mechanism(self,data, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
+    def apply_mechanism(self, data, datasize, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
         if data==None:
             pass
             #throw error
@@ -33,24 +33,22 @@ class GaussianNoise(AdditiveNoise):
     def __init__(self, seed=None):
         self.rng = np.random.default_rng(seed);
 
-    def apply_mechanism(self,data, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
-        scale = calculate_scale(epsilon, len(data), delta)
-        noise = self.rng.normal(0, scale=scale, size=len(data))
-        #throw error
-        #Gaussian GaussianNoise
-        return noise 
+    def apply_mechanism(self, data, datasize, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
+        scale = calculate_scale(epsilon, datasize, delta)
+        noise = self.rng.normal(0, scale=scale)
+        return data + noise 
 
 
 class LaplaceNoise(AdditiveNoise):
     def __init__(self, seed=None):
         self.rng = np.random.default_rng(seed);
 
-    def apply_mechanism(self,data, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
-        scale = calculate_scale(epsilon, len(data))
-        noise = self.rng.laplace(scale=scale, size=len(data));
+    def apply_mechanism(self, data, datasize, epsilon=None, delta=None, sample_size=None, probabilities=None ) -> ndarray:
+        scale = calculate_scale(epsilon, datasize)
+        noise = self.rng.laplace(scale=scale);
         #throw error
         #Laplace Noise
-        return noise 
+        return data + noise 
 
 def calculate_scale(epsilon, size, delta=None) -> float:
     if delta == None or delta == 0.0:

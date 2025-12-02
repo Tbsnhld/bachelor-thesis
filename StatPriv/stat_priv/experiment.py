@@ -2,6 +2,7 @@ import database as db
 from mechanism import GaussianNoise, LaplaceNoise, Mechanism
 from attack_model import AttackModel
 from config import Config
+from database import Database
 
 class Experiment():
     def __init__(self):
@@ -42,33 +43,54 @@ class Experiment():
         return self
 
     def run(self):
-        if isinstance(self.mechanism, LaplaceNoise):
-            return self._run_laplace()
-
-        if isinstance(self.mechanism, GaussianNoise):
-            return self._run_gaussian()
-
-
-    def _run_laplace(self):
         if self.config != None:
-            self.db = db.Database(self.config)
-            data = self.db.data
-            mechanismed_data = self.mechanism.apply_mechanism(data, delta=0.0, epsilon=self.epsilon)
-            decision = self.attack_model.run(mechanismed_data)
-            return decision 
+            db = Database(self.config)
+            data = db.get_data()
+            # Für subsampling: data und query answer in apply_mechanism, weil Reihenfolge sich ändert
+            datasize = self.config.size
+            query_answer = db.run_query()
+            mechanismed_answer = self.mechanism.apply_mechanism(query_answer, delta=0.0, epsilon=self.epsilon, datasize=datasize)
+            attacker_decision = self.attack_model.run(mechanismed_answer)
+            return self.check_decision(attacker_decision)
 
-    def _run_gaussian(self):
-        self.db = db.Database(self.config)
-        data = self.db.data
-        average = data.get_average()
-        mechanismed_data = self.mechanism.apply_mechanism(data, delta=self.delta, epsilon=self.epsilon)
-        decision = self.attack_model.run(mechanismed_data)
-        return decision 
 
-    def _run_subsampling(self):
-        self.db = db.Database(self.config)
-        data = self.db.data
-        mechanismed_data = self.mechanism.apply_mechanism(data, sample_size=self.sample_size)
-        decision = self.attack_model.run(mechanismed_data)
-        ##return decision
-        pass
+
+    def check_decision(self, attacker_decision):
+        actual_added = int(self.config.added_value)
+        print(attacker_decision)
+        if actual_added == attacker_decision:
+            return True 
+        else:
+            return False
+
+
+#        if isinstance(self.mechanism, LaplaceNoise):
+#            return self._run_laplace()
+#
+#        if isinstance(self.mechanism, GaussianNoise):
+#            return self._run_gaussian()
+#
+#
+#    def _run_laplace(self):
+#        if self.config != None:
+#            self.db = db.Database(self.config)
+#            data = self.db.data
+#            mechanismed_data = self.mechanism.apply_mechanism(data, delta=0.0, epsilon=self.epsilon)
+#            decision = self.attack_model.run(mechanismed_data)
+#            return decision 
+#
+#    def _run_gaussian(self):
+#        self.db = db.Database(self.config)
+#        data = self.db.data
+#        average = data.get_average()
+#        mechanismed_data = self.mechanism.apply_mechanism(data, delta=self.delta, epsilon=self.epsilon)
+#        decision = self.attack_model.run(mechanismed_data)
+#        return decision 
+#
+#    def _run_subsampling(self):
+#        self.db = db.Database(self.config)
+#        data = self.db.data
+#        mechanismed_data = self.mechanism.apply_mechanism(data, sample_size=self.sample_size)
+#        decision = self.attack_model.run(mechanismed_data)
+#        ##return decision
+#        pass
