@@ -4,11 +4,6 @@ Bachelorarbeit Statistical Privacy
 # Fragen
 
 
-- Muss ich bei der Definition von Differential Privacy für Subsampling seperat von Noise definieren oder klappt es wenn ich von Queryantworten spreche?
-- Gerade implementiert unterscheiden sich die Datenbanken darin, dass eine Datenbank das kritische Element enthält und die andere nicht. Ist es relevant, dass die beiden gleich groß sind?
-- Entscheider ist ja nicht Max-liklihood. Welche Entscheider für z.B. Szenario Zahlen 0-10 oder noch komplexer.
-        Verteilung ist ja bekannt und muss entsprechend nicht geschätzt werden, sondern ich muss ja die erwartete Verteilung mit der wahrgenommenen Vergleichen und basierend darauf ne Entscheidung treffen 
-        Dafür ist sowas wie ein t-test sinnvoller
 - Wissen über Verteilung der Datensätze: Bedeutet bei Gaussverteilung Mittelwert und Varianz oder alle priori Wahrscheinlichkeiten?
     
 
