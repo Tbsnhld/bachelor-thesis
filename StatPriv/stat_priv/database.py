@@ -4,11 +4,11 @@ from config import Config
 from mechanism import Mechanism
 
 class Database:
-    def __init__(self, config: Config)-> None:
+    def __init__(self, config: Config) -> None:
         self.rng = np.random.default_rng(config.seed)
-        datasource = config.datasource
-        self.data = datasource.load_data(self.rng, config.size, config.probability)
         self.config = config
+        self.datasource = config.datasource
+        self.data = self.datasource.load_data(self.rng, added_value=config.added_value, size=config.size)
 
 #    def generate_data(self, n, p):
 #        self.propability = p
