@@ -1,8 +1,7 @@
-import database as db
-from mechanism import GaussianNoise, LaplaceNoise, Mechanism
-from attack_model import AttackModel
-from config import Config
-from database import Database
+from src.mechanism import GaussianNoise, LaplaceNoise, Mechanism
+from src.attack_model import AttackModel
+from src.config import Config
+from src.database import Database
 
 class Experiment():
     def __init__(self):

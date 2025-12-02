@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from config import Config
-from data_source import BernoulliSource
-from query import AverageQuery
+from src.config import Config
+from src.data_source import BernoulliSource
+from src.query import AverageQuery
 class AttackModel(ABC):
    @abstractmethod
    def run(self, observed_answer)-> int:

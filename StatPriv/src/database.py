@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.random import normal
-from config import Config
-from mechanism import Mechanism
+from src.config import Config
+from src.mechanism import Mechanism
 
 class Database:
     def __init__(self, config: Config) -> None:

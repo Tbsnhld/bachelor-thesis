@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from numpy._typing import _UnknownType
-from data_source import DataSource
-from query import Query
+from src.data_source import DataSource
+from src.query import Query
 
 @dataclass
 class Config:

@@ -1,9 +1,9 @@
 from math import dist
 from InquirerPy import inquirer 
-from builder import ExperimentBuilder
-from data_source import BernoulliSource, DataSource, GaussianSource, TenSource
-from simulator import MonteCarlo
-from observer import SuccessRateObserver 
+from src.builder import ExperimentBuilder
+from src.data_source import BernoulliSource, DataSource, GaussianSource, TenSource
+from src.simulator import MonteCarlo
+from src.observer import SuccessRateObserver 
 
 def main():
     builder = ExperimentBuilder()

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from config import Config
-from experiment import Experiment
-from mechanism import GaussianNoise, LaplaceNoise, Subsampling
-from attack_model import MaximumLikelihood
-from query import AverageQuery, Query, SumQuery
+from src.config import Config
+from src.experiment import Experiment
+from src.mechanism import GaussianNoise, LaplaceNoise, Subsampling
+from src.attack_model import MaximumLikelihood
+from src.query import AverageQuery, Query, SumQuery
 
 class Builder(ABC):
     @abstractmethod
