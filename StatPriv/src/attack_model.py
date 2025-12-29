@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.config import Config
+from models.config import Config
 from src.data_source import BernoulliSource
 from src.query import AverageQuery
 class AttackModel(ABC):
@@ -11,7 +11,7 @@ class MaximumLikelihood(AttackModel):
     def __init__(self, database_config: Config):
         self.database_config = database_config
 
-    def run(self, observed_answer) -> int:
+    def run(self, observed_answer, databases) -> int:
         probability = self.database_config.probability 
         datasource = self.database_config.datasource
         query = self.database_config.query
@@ -30,5 +30,3 @@ class MaximumLikelihood(AttackModel):
     #   size = self.database_config.size
         pass
                        
-    
-        

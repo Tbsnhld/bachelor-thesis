@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.config import Config
+from models.config import Config
 from src.experiment import Experiment
 from src.mechanism import GaussianNoise, LaplaceNoise, Subsampling
 from src.attack_model import MaximumLikelihood
@@ -27,16 +27,17 @@ class ExperimentBuilder(Builder):
     experiment: Experiment
 
     def __init__(self):
-        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_value = None) 
+        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_values = None, searched_database = None) 
         self.experiment = Experiment()
 
-    def withDatabase(self, distribution, query, datasource, size, added_value, seed=None):
+    def withDatabase(self, distribution, query, datasource, size, added_values, searched_database, seed=None):
         self._database_config.probability = distribution 
         self._database_config.datasource = datasource
         self._database_config.query = self.generate_Query(query) 
         self._database_config.size = size
-        self._database_config.seed = seed 
-        self._database_config.added_value = added_value
+        self._database_config.seed = seed
+        self._database_config.added_values = added_values
+        self._database_config.searched_database = searched_database 
         self.experiment.set_database_config(self._database_config)
         return self
 

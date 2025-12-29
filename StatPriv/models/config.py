@@ -10,7 +10,8 @@ class Config:
     size: int | None
     probability: float | None
     query: Query | None
-    added_value: _UnknownType
+    added_values: _UnknownType 
+    searched_database: int | None
     
 
 

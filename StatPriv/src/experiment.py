@@ -1,7 +1,7 @@
 from src.mechanism import GaussianNoise, LaplaceNoise, Mechanism
 from src.attack_model import AttackModel
-from src.config import Config
-from src.database import Database
+from models.config import Config
+from src.database import DatabaseGenerator
 
 class Experiment():
     def __init__(self):
@@ -43,21 +43,24 @@ class Experiment():
 
     def run(self):
         if self.config != None:
-            db = Database(self.config)
-            data = db.get_data()
+            datagenerator = DatabaseGenerator(self.config)
+            databases = datagenerator.get_databases()
             # Für subsampling: data und query answer in apply_mechanism, weil Reihenfolge sich ändert
             datasize = self.config.size
-            query_answer = db.run_query()
+
+            query_answer = self.run_query(databases) 
             mechanismed_answer = self.mechanism.apply_mechanism(query_answer, delta=0.0, epsilon=self.epsilon, datasize=datasize)
-            attacker_decision = self.attack_model.run(mechanismed_answer)
+            attacker_decision = self.attack_model.run(mechanismed_answer, databases)
             return self.check_decision(attacker_decision)
 
 
+    def run_query(self, databases):
+        selected_database = databases[self.config.searched_database]
+        return selected_database.run_query()
 
     def check_decision(self, attacker_decision):
-        actual_added = int(self.config.added_value)
-        print(attacker_decision)
-        if actual_added == attacker_decision:
+        actual_database: int = self.config.searched_database
+        if actual_database == attacker_decision:
             return True 
         else:
             return False

@@ -1,61 +1,69 @@
 from abc import ABC, abstractmethod
+from scipy import stats
 import numpy as np
 import pandas as pd
 
-
 class DataSource(ABC):
     @abstractmethod
-    def load_data(self, rng: np.random.Generator, added_value, size: int | None = None):
+    def load_data(self, rng: np.random.Generator):
+        pass
+
+    @abstractmethod
+    def select_value(self, data, added_value):
         pass
 
 class BernoulliSource(DataSource):
-    def __init__(self, p: float):
+    def __init__(self, p: float, size: int):
         self.p = p
-        self.domain = list(range(1))
+        self.size = size
+        self.domain = list(range(2))
 
-    def load_data(self, rng: np.random.Generator, added_value, size: int | None = None):
-        data = rng.binomial(n=1, p=self.p, size=size)
-        data = self.select_value(added_value, data)
+    def load_data(self, rng: np.random.Generator):
+        data = rng.binomial(n=1, p=self.p, size=self.size)
         return data
 
-    def select_value(self, value, data):
+    def select_value(self, data, added_value):
         size = data.size
-        np.put(data, [size - 1], value)
+        np.put(data, [size - 1], added_value)
+        return data
+
+    def random_variable(self):
+        data = stats.binom(self.size, self.p)
         return data
 
 
 class TenSource(DataSource):
-    def __init__(self, p: (float)|None=None):
+    def __init__(self, size: int, p: (float)|None=None):
         self.p = p
+        self.size = size
         self.domain = list(range(10))
 
-    def load_data(self, rng: np.random.Generator, added_value, size: int | None = None):
+    def load_data(self, rng: np.random.Generator):
         if self.p != None:
             data = rng.choice(a=self.domain, replace=True, p=self.p)
         else:
             data = rng.choice(a=self.domain, replace=True)
-        data = self.select_value(added_value, data)
         return data
 
-    def select_value(self, value, data):
+    def select_value(self, data, added_value):
         size = data.size
-        np.put(data, [size - 1], value)
+        np.put(data, [size - 1], added_value)
         return data
 
 class GaussianSource(DataSource):
-    def __init__(self, mean: float, std: float):
+    def __init__(self, mean: float, std: float, size: int):
         self.mean = mean
         self.std = std
+        self.size = size
         self.domain = None
 
-    def load_data(self, rng: np.random.Generator, added_value, size: int | None = None):
-        data = np.round(rng.normal(self.mean, self.std, size=size), 3)
-        data = self.select_value(added_value, data)
+    def load_data(self, rng: np.random.Generator, added_value):
+        data = np.round(rng.normal(self.mean, self.std, size=self.size), 3)
         return data
 
-    def select_value(self, value, data):
+    def select_value(self, data, added_value):
         size = data.size
-        np.put(data, [size - 1], value)
+        np.put(data, [size - 1], added_value)
         return data
 
 class CSVSource(DataSource):
