@@ -1,17 +1,28 @@
 import pytest
-from stat_priv.database import Database
+from src.database import Database
+from models.enums import DataSourceType
+from tests import helper
 import numpy as np
 class TestDatabase:
 
-    def test_reseed(self):
-        gen1 = Database(seed=12)
-        gen2 = Database(seed=12)
+    def test_get_data(self):
+        config = helper.make_database_config(size=50)
+        db = Database(config)
+        data = db.get_data()
 
-        assert np.array_equal(
-            gen1.generate_data(3, 0.3),
-            gen2.generate_data(3, 0.3)
-        )
 
-    ##def test_generate_data(self):
-        ##assert Database.generate_data() = 
+        assert data.size == 50
+
+    def test_clone_with_added_value(self):
+        config = helper.make_database_config(added_value=1)
+        db = Database(config)
+        clone = db.clone_with_added_value(0)
+        data_db = db.get_data()
+        data_clone = clone.get_data()
+
+        assert data_clone[data_clone.size-1] == 0
+        assert data_clone[data_clone.size-1] != data_db[data_db.size - 1]
+        
+
+
 
