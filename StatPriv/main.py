@@ -44,7 +44,7 @@ def bounds(builder: ExperimentBuilder) -> ExperimentBuilder:
 def database(builder: ExperimentBuilder) -> ExperimentBuilder:
     data_source = inquirer.select(
             message="Database Type",
-            choices=["Binary/Bernoulli", "Binomial 1-10", "Gaussian", "CSV"],
+            choices=["Binary/Bernoulli", "Random 1-10", "Gaussian", "CSV"],
             default="Binary/Bernoulli",
             ).execute()
 
@@ -64,16 +64,13 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
             ).execute()
 
 
-    seeds = None
+    seed = None
     if ask_for_seed():
-        seed1 = enter_seed('first database') 
-        seed2 = enter_seed('second database')
-        seeds = [seed1, seed2]
+        seed = enter_seed('Seed') 
 
-    datasource = datasource_generator(data_source, size, distribution, seeds)
+    datasource = datasource_generator(data_source, size, distribution, seed)
     searched_values = select_values(datasource)
-    searched_database = select_searched_database()
-    return builder.withDatabase(distribution, query, size, datasource=datasource, added_values=searched_values, searched_database=searched_database, seeds=seeds)
+    return builder.with_database(distribution=distribution, query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
 
 def attackModel(builder: ExperimentBuilder):
     if builder._database_config == None:
@@ -84,7 +81,7 @@ def attackModel(builder: ExperimentBuilder):
             choices=["maximum_likelihood", "other"],
             default="maximum_likelihood"
             ).execute()
-    builder.withAttackModel(attackModel)
+    builder.with_attack_model(attackModel)
     return builder
 
 def mechanism(builder: ExperimentBuilder):
@@ -95,9 +92,9 @@ def mechanism(builder: ExperimentBuilder):
             ).execute()
 
     if ask_for_seed():
-        seed = enter_seed()
-        return builder.withMechanism(attackModel, seed)
-    builder.withMechanism(attackModel)
+        seed = enter_seed("Mechanism seed")
+        return builder.with_mechanism(attackModel, seed)
+    builder.with_mechanism(attackModel)
     return builder
 
 def datasource_generator(datasource_str : str, size: int, distribution: float, seeds=None):
@@ -127,13 +124,13 @@ def select_values(datasource: DataSource):
         domain = datasource.domain
         domain_list_str = [str(value) for value in domain]
         selected_value = inquirer.select(
-                message="Critical Entry value in first dataset",#TODO change message
+                message="Critical Entry value in searched dataset",#TODO change message
                 choices=domain_list_str,
                 default=domain_list_str[0]
                 ).execute()
 
         selected_value2 = inquirer.select(
-                message="Critical Entry value in second dataset", #TODO change message
+                message="Critical Entry value in the other dataset",
                 choices=domain_list_str,
                 default=domain_list_str[0]
                 ).execute()
@@ -165,7 +162,7 @@ def run_experiment(builder: ExperimentBuilder):
             max_allowed=10000,
             default=500 
         ).execute()
-        experiment = builder.getExperiment()
+        experiment = builder.get_experiment()
         observer = SuccessRateObserver()
         observer.probabilities(experiment.config.probability)
         simulator = MonteCarlo(int(run_count), experiment)
@@ -188,15 +185,6 @@ def enter_seed(message: str | None) -> int:
     if message == None:
         return int(inquirer.number(message=f"Seed: ").execute())
     return int(inquirer.number(message=f"Enter seed for {message}").execute())
-
-def select_searched_database() -> int:
-    number_selector = [str(value) for value in [0,1]]
-    searched_database = inquirer.select(
-            message="Which database is the searched one?",
-            choices=number_selector,
-            default='0',
-            ).execute()
-    return searched_database;
 
 if __name__ == "__main__":
     main()

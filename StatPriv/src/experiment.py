@@ -1,7 +1,7 @@
 from src.mechanism import GaussianNoise, LaplaceNoise, Mechanism
 from src.attack_model import AttackModel
 from models.config import Config
-from src.database import DatabaseGenerator
+from src.database_generator import DatabaseGenerator
 
 class Experiment():
     def __init__(self):
@@ -54,45 +54,15 @@ class Experiment():
             return self.check_decision(attacker_decision)
 
 
+    #selected database is always the first one
     def run_query(self, databases):
-        selected_database = databases[self.config.searched_database]
+        selected_database = databases[0]
         return selected_database.run_query()
 
+    #Searched database is always the first one
     def check_decision(self, attacker_decision):
-        actual_database: int = self.config.searched_database
-        if actual_database == attacker_decision:
+        
+        if attacker_decision == 0:
             return True 
         else:
             return False
-
-
-#        if isinstance(self.mechanism, LaplaceNoise):
-#            return self._run_laplace()
-#
-#        if isinstance(self.mechanism, GaussianNoise):
-#            return self._run_gaussian()
-#
-#
-#    def _run_laplace(self):
-#        if self.config != None:
-#            self.db = db.Database(self.config)
-#            data = self.db.data
-#            mechanismed_data = self.mechanism.apply_mechanism(data, delta=0.0, epsilon=self.epsilon)
-#            decision = self.attack_model.run(mechanismed_data)
-#            return decision 
-#
-#    def _run_gaussian(self):
-#        self.db = db.Database(self.config)
-#        data = self.db.data
-#        average = data.get_average()
-#        mechanismed_data = self.mechanism.apply_mechanism(data, delta=self.delta, epsilon=self.epsilon)
-#        decision = self.attack_model.run(mechanismed_data)
-#        return decision 
-#
-#    def _run_subsampling(self):
-#        self.db = db.Database(self.config)
-#        data = self.db.data
-#        mechanismed_data = self.mechanism.apply_mechanism(data, sample_size=self.sample_size)
-#        decision = self.attack_model.run(mechanismed_data)
-#        ##return decision
-#        pass

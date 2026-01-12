@@ -7,19 +7,19 @@ from src.query import AverageQuery, Query, SumQuery
 
 class Builder(ABC):
     @abstractmethod
-    def withDatabase(self, distribution, query, datasource, size, added_value, seed=None):
+    def with_database(self, distribution, query, datasource, size, added_value, seed=None):
         pass
 
     @abstractmethod
-    def withAttackModel(self, strategy):
+    def with_attack_model(self, strategy):
         pass
 
     @abstractmethod
-    def withMechanism(self, mechanism_name, seed=None):
+    def with_mechanism(self, mechanism_name, seed=None):
         pass
 
     @abstractmethod
-    def getExperiment(self):
+    def get_experiment(self):
         pass
 
 
@@ -27,22 +27,23 @@ class ExperimentBuilder(Builder):
     experiment: Experiment
 
     def __init__(self):
-        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_values = None, searched_database = None) 
+        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_values = None) 
         self.experiment = Experiment()
 
-    def withDatabase(self, distribution, query, datasource, size, added_values, searched_database, seed=None):
-        self._database_config.probability = distribution 
-        self._database_config.datasource = datasource
-        self._database_config.query = self.generate_Query(query) 
-        self._database_config.size = size
-        self._database_config.seed = seed
-        self._database_config.added_values = added_values
-        self._database_config.searched_database = searched_database 
+    def with_database(self, distribution, query, datasource, size, added_values, seed=None):
+        self._database_config = (
+            self._database_config.with_probability(distribution)
+                .with_datasource(datasource)
+                .with_query(self.generate_query(query)) 
+                .with_size(size)
+                .with_seed(seed)
+                .with_added_values(added_values)
+             )
         self.experiment.set_database_config(self._database_config)
         return self
 
 
-    def withAttackModel(self, strategy):
+    def with_attack_model(self, strategy):
         if self._database_config == None:
             raise RuntimeError("Database Config must be build before attack model.")
         if strategy == "maximum_likelihood":
@@ -52,7 +53,7 @@ class ExperimentBuilder(Builder):
             raise ValueError(f"Unknown or not implemented attack model: {strategy}")
         return self
 
-    def withMechanism(self, mechanism_name, seed=None):
+    def with_mechanism(self, mechanism_name, seed=None):
         if mechanism_name == "gaussian":
             noise = GaussianNoise(seed)
             self.experiment.set_mechanism(noise)
@@ -65,7 +66,7 @@ class ExperimentBuilder(Builder):
             raise ValueError(f"Unknown or not implemented mechanism type: {mechanism_name}")
         return self
 
-    def generate_Query(self, query_choice:str):
+    def generate_query(self, query_choice:str):
         if query_choice == "Average":
             query = AverageQuery()
         elif query_choice ==  "Sum":
@@ -75,6 +76,6 @@ class ExperimentBuilder(Builder):
         return query 
 
 
-    def getExperiment(self):
+    def get_experiment(self):
         return self.experiment
 
