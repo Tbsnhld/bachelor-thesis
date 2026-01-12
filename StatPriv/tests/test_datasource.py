@@ -53,8 +53,12 @@ class TestBernoulliSource:
         assert rv_1.mean() == source.query_distribution(0.3).mean()
 
     def snap_observed(self):
+        source = BernoulliSource(p=0.3, size=10)
+        observed = 0.0682
+        expected = 0.1
+
+        assert expected == source.snap_observed(observed)
 
 
-    ##def test_generate_data(self):
-        ##assert Database.generate_data() = 
+
 
