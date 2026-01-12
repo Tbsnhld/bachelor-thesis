@@ -28,7 +28,6 @@ class MonteCarlo(Simulator):
 
         for i in range(self.n):
             turnout = self.experiment.run()
-            print(i)
             self.notify(turnout)
         self.finalize()
         

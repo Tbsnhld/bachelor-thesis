@@ -8,22 +8,7 @@ from src.observer import SuccessRateObserver
 def main():
     builder = ExperimentBuilder()
     while True:
-        solution = checkFinished(builder)
-        if solution == True:
-            run_count = inquirer.number(
-                message="How often do you wish to run the experiment?",
-                float_allowed=False,
-                min_allowed=1,
-                max_allowed=10000,
-                default=500 
-            ).execute()
-            experiment = builder.getExperiment()
-            observer = SuccessRateObserver()
-            observer.probabilities(experiment.config.probability)
-            simulator = MonteCarlo(int(run_count), experiment)
-            simulator.add_observer(observer)
-            simulator.run_simulation()
-            exit()
+        checkFinished(builder)
 
         options = inquirer.select(
                 message="What do you wish to configure?",
@@ -59,7 +44,7 @@ def bounds(builder: ExperimentBuilder) -> ExperimentBuilder:
 def database(builder: ExperimentBuilder) -> ExperimentBuilder:
     data_source = inquirer.select(
             message="Database Type",
-            choices=["Binary/Bernoulli", "Binomial 1-10", "Gaussian", "CSV"],
+            choices=["Binary/Bernoulli", "Random 1-10", "Gaussian", "CSV"],
             default="Binary/Bernoulli",
             ).execute()
 
@@ -79,23 +64,13 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
             ).execute()
 
 
-    seedy_n = inquirer.select(
-            message="Do you wish to use a seed?",
-            choices=["Yes","No"],
-            default="Exit"
-    ).execute()
+    seed = None
+    if ask_for_seed():
+        seed = enter_seed('Seed') 
 
-
-    if seedy_n == "Yes":
-        seed = int(inquirer.number(
-            message="Seed: ",
-        ).execute())
-        datasource = datasource_generator(data_source, size, distribution, seed)
-        return builder.withDatabase(distribution, query, datasource, size, seed)
-
-    datasource = datasource_generator(data_source, size, distribution)
-    searched_value = select_value(datasource)
-    return builder.withDatabase(distribution=distribution, query=query, size=size, datasource=datasource, added_value=searched_value)
+    datasource = datasource_generator(data_source, size, distribution, seed)
+    searched_values = select_values(datasource)
+    return builder.with_database(distribution=distribution, query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
 
 def attackModel(builder: ExperimentBuilder):
     if builder._database_config == None:
@@ -106,7 +81,7 @@ def attackModel(builder: ExperimentBuilder):
             choices=["maximum_likelihood", "other"],
             default="maximum_likelihood"
             ).execute()
-    builder.withAttackModel(attackModel)
+    builder.with_attack_model(attackModel)
     return builder
 
 def mechanism(builder: ExperimentBuilder):
@@ -116,26 +91,18 @@ def mechanism(builder: ExperimentBuilder):
             default="gaussian"
             ).execute()
 
-    seedy_n = inquirer.select(
-            message="Do you wish to use a seed?",
-            choices=["Yes","No"],
-            default="Exit"
-    ).execute()
-
-    if seedy_n == "Yes":
-        seed = int(inquirer.number(
-            message="Seed: ",
-        ).execute())
-        return builder.withMechanism(attackModel, seed)
-    builder.withMechanism(attackModel)
+    if ask_for_seed():
+        seed = enter_seed("Mechanism seed")
+        return builder.with_mechanism(attackModel, seed)
+    builder.with_mechanism(attackModel)
     return builder
 
-def datasource_generator(datasource_str : str, size: int, distribution: float, seed=None):
+def datasource_generator(datasource_str : str, size: int, distribution: float, seeds=None):
     datasource=None
     if datasource_str == "Binary/Bernoulli":
-        datasource = BernoulliSource(p=distribution)
-    elif datasource_str == "Binomial 1-10":
-        datasource = TenSource(p=distribution)
+        datasource = BernoulliSource(p=distribution, size=size)
+    elif datasource_str == "Random 1-10":
+        datasource = TenSource(p=distribution, size=size)
     elif datasource_str == "Gaussian":
         mean = float(inquirer.number(
             message="Mean: ",
@@ -145,22 +112,31 @@ def datasource_generator(datasource_str : str, size: int, distribution: float, s
             message="Standard deviation: ",
             float_allowed=True,
         ).execute())
-        datasource = GaussianSource(mean, std)
+        datasource = GaussianSource(mean, std, size=size)
     elif datasource_str == "CSV":
         raise ValueError(f"Data source not implemented: {datasource_str}")
     else :
         raise ValueError(f"Data source could not be generated: {datasource_str}")
     return datasource
 
-def select_value(datasource: DataSource):
+
+def select_values(datasource: DataSource):
         domain = datasource.domain
         domain_list_str = [str(value) for value in domain]
         selected_value = inquirer.select(
-                message="Which value is searched?",
+                message="Critical Entry value in searched dataset",#TODO change message
                 choices=domain_list_str,
                 default=domain_list_str[0]
                 ).execute()
-        return selected_value
+
+        selected_value2 = inquirer.select(
+                message="Critical Entry value in the other dataset",
+                choices=domain_list_str,
+                default=domain_list_str[0]
+                ).execute()
+
+        selected_values = [selected_value, selected_value2]
+        return selected_values
 
 def checkFinished(builder: ExperimentBuilder):
     if (builder.experiment.attack_model is not None and
@@ -174,9 +150,41 @@ def checkFinished(builder: ExperimentBuilder):
                 ).execute()
 
         if fin == "No":
-            return False
+            return 
         if fin == "Yes":
-            return True
+            run_experiment(builder)
+
+def run_experiment(builder: ExperimentBuilder):
+        run_count = inquirer.number(
+            message="How often do you wish to run the experiment?",
+            float_allowed=False,
+            min_allowed=1,
+            max_allowed=10000,
+            default=500 
+        ).execute()
+        experiment = builder.get_experiment()
+        observer = SuccessRateObserver()
+        observer.probabilities(experiment.config.probability)
+        simulator = MonteCarlo(int(run_count), experiment)
+        simulator.add_observer(observer)
+        simulator.run_simulation()
+        exit()
+
+def ask_for_seed() -> bool:
+    seed = inquirer.select(
+            message="Do you wish to use a seed?",
+            choices=["Yes", "No"],
+            default=["No"]
+            ).execute()
+
+    if seed == "Yes":
+        return True 
+    return False 
+
+def enter_seed(message: str | None) -> int:
+    if message == None:
+        return int(inquirer.number(message=f"Seed: ").execute())
+    return int(inquirer.number(message=f"Enter seed for {message}").execute())
 
 if __name__ == "__main__":
     main()
