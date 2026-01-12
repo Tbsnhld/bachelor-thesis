@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import AbstractAsyncContextManager
 from scipy import stats
 import numpy as np
 import pandas as pd
@@ -10,6 +11,10 @@ class DataSource(ABC):
 
     @abstractmethod
     def select_value(self, data, added_value):
+        pass
+
+    @abstractmethod
+    def query_distribution(self, probability, variance):
         pass
 
 class BernoulliSource(DataSource):
@@ -43,7 +48,7 @@ class BernoulliSource(DataSource):
         snapped_observed = (round(observed_value * self.size))
         return snapped_observed
 
-    def query_distribution(self, probability):
+    def query_distribution(self, probability, variance=None):
         return self.random_variable(self.size, probability);
 
 
@@ -73,6 +78,13 @@ class TenSource(DataSource):
         new_data = np.put(new_data, [size - 1], added_value)
         return new_data
 
+    def random_variable(self, size, probability):
+        #TODO
+        pass
+
+    def query_distribution(self, probability, variance=None):
+        return self.random_variable(self.size, probability);
+
 class GaussianSource(DataSource):
     def __init__(self, mean: float, std: float, size: int):
         self.mean = mean
@@ -84,18 +96,22 @@ class GaussianSource(DataSource):
         data = np.round(rng.normal(loc=self.mean, scale=self.std, size=self.size), 3)
         return data
 
-    def random_variable(self):
-        distribution_rv = stats.norm(loc=self.mean, scale=self.std)
+    def random_variable(self, probability, std):
+        distribution_rv = stats.norm(loc=probability, scale=std)
         return distribution_rv
 
     def likelihood(self, database_conf, query, observed_value):
-        distribution_rv = self.random_variable()
+        distribution_rv = self.random_variable(self.mean, self.std)
         return query.likelihood(database_conf, distribution_rv, observed_value)
 
     def select_value(self, data, added_value):
         new_data = data.copy()
         new_data[-1] = added_value
         return new_data
+
+    def query_distribution(self, probability, variance=None):
+        std = np.sqrt(variance)
+        return self.random_variable(probability, std);
 
 class CSVSource(DataSource):
     def __init__(self, filepath: str, column: str | None = None):

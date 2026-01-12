@@ -13,11 +13,6 @@ class Query(ABC):
     def likelihood(self, database, distribution_rv, observed_value):
         pass
 
-    def calculate_expected_gaussian(self, mean, var, size): 
-        std = np.sqrt(var)
-        std_expected_answer = std/np.sqrt(size)
-        return stats.norm(loc=mean, scale=np.sqrt(var))
-
 class AverageQuery(Query):
     #data: Generated numpy data
     def execute(self, data):
@@ -27,18 +22,19 @@ class AverageQuery(Query):
     def likelihood(self, database_conf, distribution_rv, observed_value):
         size = database_conf.size
         rv_mean = distribution_rv.mean()
-        adversary_mean = (round((size - 1) * rv_mean) + int(database_conf.added_value)) / size
+        adversary_mean = ((size - 1) * rv_mean + int(database_conf.added_value)) / size
         adversary_variance = self.variance(database_conf, distribution_rv) 
 
-        clt_mean_rv = self.calculate_expected_value(adversary_mean, adversary_variance)
-        return clt_mean_rv.pdf(observed_value) 
+        var = database_conf.datasource.query_distribution(adversary_mean, adversary_variance)
+        return var.pdf(observed_value) 
 
     def discrete_likelihood(self, database_conf, distribution_rv, observed_value):
         size = database_conf.size
         rv_mean = distribution_rv.mean() 
         adversary_mean = (round((size - 1) * rv_mean) + int(database_conf.added_value)) / size
+        adversary_variance = self.variance(database_conf, distribution_rv) 
 
-        var = database_conf.datasource.query_distribution(adversary_mean)
+        var = database_conf.datasource.query_distribution(adversary_mean, adversary_variance)
         return var.pmf(observed_value) 
     
     def mean(self, database_conf, distribution_rv):
@@ -55,9 +51,6 @@ class AverageQuery(Query):
         adversary_variance = (original_contrib + outlier_contrib) / database_conf.size
         return adversary_variance
 
-    def calculate_expected_gaussian(self, mean, var, size): 
-        return super().calculate_expected_gaussian(mean, var, size)
-
 class MedianQuery(Query):
     def execute(self, data):
         return data[len(data)/2]
@@ -66,7 +59,7 @@ class MedianQuery(Query):
         median = distribution_rv.ppf(0.5)
         size = database_conf.size
         adversary_median = ((size - 1) * median + int(database_conf.added_value)) / size 
-        clt_rv = self.central_limit_theorem_variable(adversary_median)
+        clt_rv = database_conf.datasource.query_distribution(adversary_median)
         return clt_rv.pdf(observed_value) 
 
     def mean(self, database_conf, distribution_rv):
@@ -82,9 +75,6 @@ class MedianQuery(Query):
         outlier_contrib = (database_conf.added_value - adversary_mean)**2
         adversary_variance = (original_contrib + outlier_contrib) / database_conf.size
         return adversary_variance
-
-    def central_limit_theorem_variable(self, mean): 
-        return super().central_limit_theorem_variable(mean)
     
 class SumQuery(Query):
     def __init__(self):
@@ -100,7 +90,4 @@ class SumQuery(Query):
         guessed_sum = ((size - 1) * mean + int(database_conf.added_value))
         clt_rv = self.central_limit_theorem_variable(guessed_sum)
         return clt_rv.pdf(observed_value) 
-
-    def central_limit_theorem_variable(self, mean): 
-        return super().central_limit_theorem_variable(mean)
 
