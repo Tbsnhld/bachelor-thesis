@@ -3,6 +3,7 @@ from contextlib import AbstractAsyncContextManager
 from scipy import stats
 import numpy as np
 import pandas as pd
+from models.enums import QueryType
 import src.query as query_types
 
 class DataSource(ABC):
@@ -55,12 +56,13 @@ class BernoulliSource(DataSource):
         snapped_scaled_observed = (round(observed_value * self.size))
         return snapped_scaled_observed
 
-    def query_distribution(self, probability, type_str, variance=None) :
-        if type_str == "average":
+    def query_distribution(self, probability, query_type, variance=None) :
+        if query_type == QueryType.AVERAGE:
             return self.random_variable(self.size, probability)
-        elif type_str == "mean":
+        elif query_type == QueryType.MEDIAN:
             return self.random_variable(self.size, probability)
-        elif type_str == "sum":
+        elif query_type == QueryType.SUM:
+            #TODO: Check if this makes sense
             return self.random_variable(self.size * self.size, probability)
 
 
