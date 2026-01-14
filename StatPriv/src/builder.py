@@ -3,7 +3,7 @@ from models.config import Config
 from src.experiment import Experiment
 from src.mechanism import GaussianNoise, LaplaceNoise, Subsampling
 from src.attack_model import MaximumLikelihood
-from src.query import AverageQuery, Query, SumQuery
+from src.query import AverageQuery, MedianQuery, Query, SumQuery
 
 class Builder(ABC):
     @abstractmethod
@@ -69,6 +69,8 @@ class ExperimentBuilder(Builder):
     def generate_query(self, query_choice:str):
         if query_choice == "Average":
             query = AverageQuery()
+        elif query_choice == "Median":
+            query = MedianQuery()
         elif query_choice ==  "Sum":
             query = SumQuery()
         else:
