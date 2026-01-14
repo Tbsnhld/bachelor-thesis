@@ -3,6 +3,7 @@ from contextlib import AbstractAsyncContextManager
 from scipy import stats
 import numpy as np
 import pandas as pd
+import src.query as query_types
 
 class DataSource(ABC):
     @abstractmethod
@@ -37,19 +38,30 @@ class BernoulliSource(DataSource):
         return distribution_rv
 
     def likelihood(self, database_conf, query, observed_value):
-        snapped_observed = self.snap_observed(observed_value)
+        snapped_scaled_observed = observed_value
+        if type(query) == query_types.AverageQuery or type(query) == query_types.MedianQuery:
+            snapped_scaled_observed = self.snap_observed(observed_value)
         distribution_rv = self.random_variable(1, self.p)
-        return query.discrete_likelihood(database_conf, distribution_rv, snapped_observed)
+        return query.discrete_likelihood(database_conf, distribution_rv, snapped_scaled_observed)
 
     #Because noised observed value isn't necessarily within the support which would make the pmf return 0
     #theoretically what we're doing here is going from our bernoulli mean to the a binom mean,
     #reason being there are n bernoulli trials done, which when summed up is a binomial distribution
     def snap_observed(self, observed_value):
-        snapped_observed = (round(observed_value * self.size))
-        return snapped_observed
+        if observed_value > 1:
+            observed_value = 1
+        if observed_value < 0:
+            observed_value = 0
+        snapped_scaled_observed = (round(observed_value * self.size))
+        return snapped_scaled_observed
 
-    def query_distribution(self, probability, variance=None):
-        return self.random_variable(self.size, probability);
+    def query_distribution(self, probability, type_str, variance=None) :
+        if type_str == "average":
+            return self.random_variable(self.size, probability)
+        elif type_str == "mean":
+            return self.random_variable(self.size, probability)
+        elif type_str == "sum":
+            return self.random_variable(self.size * self.size, probability)
 
 
 class TenSource(DataSource):
