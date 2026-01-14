@@ -7,6 +7,9 @@ from src.observer import SuccessRateObserver
 
 def main():
     builder = ExperimentBuilder()
+    run_loop(builder)
+
+def run_loop(builder: ExperimentBuilder):
     while True:
         checkFinished(builder)
 
@@ -59,7 +62,7 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
 
     query = inquirer.select(
             message="Which query? ",
-            choices=["Average", "Sum"],
+            choices=["Average","Median", "Sum"],
             default="Average",
             ).execute()
 
@@ -168,7 +171,7 @@ def run_experiment(builder: ExperimentBuilder):
         simulator = MonteCarlo(int(run_count), experiment)
         simulator.add_observer(observer)
         simulator.run_simulation()
-        exit()
+        run_loop(builder)
 
 def ask_for_seed() -> bool:
     seed = inquirer.select(
