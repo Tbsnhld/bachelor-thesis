@@ -13,7 +13,7 @@ class Experiment():
         self.query = None
         self.mechanism = None
 
-    def set_database_config(self, config: Config):
+    def set_experiment_config(self, config: Config):
         self.config = config
         return self
 

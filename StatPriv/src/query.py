@@ -44,7 +44,7 @@ class AverageQuery(Query):
         adversary_mean = self.mean(database_conf, distribution_rv)
         var = distribution_rv.var()
         original_contrib = (database_conf.size - 1) * (var + (rv_mean - adversary_mean)**2)
-        outlier_contrib = (database_conf.added_value - adversary_mean)**2
+        outlier_contrib = (float(database_conf.added_value) - float(adversary_mean))**2
         adversary_variance = (original_contrib + outlier_contrib) / database_conf.size
         return adversary_variance
 
@@ -85,11 +85,7 @@ class MedianQuery(Query):
         return adversary_variance
     
 class SumQuery(Query):
-    def __init__(self):
-        self.size 
-    
     def execute(self, data):
-        self.size = len(data)
         return sum(data)
 
     def likelihood(self, database_conf, distribution_rv, observed_value):
