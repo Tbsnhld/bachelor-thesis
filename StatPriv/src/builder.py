@@ -27,27 +27,27 @@ class ExperimentBuilder(Builder):
     experiment: Experiment
 
     def __init__(self):
-        self._database_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_values = None) 
+        self.experiment_config = Config(seed=None,datasource=None, size=None, probability=None, query=None, added_values = None, mechanism=None) 
         self.experiment = Experiment()
 
     def with_database(self, distribution, query, datasource, size, added_values, seed=None):
-        self._database_config = (
-            self._database_config.with_probability(distribution)
+        self.experiment_config = (
+            self.experiment_config.with_probability(distribution)
                 .with_datasource(datasource)
                 .with_query(self.generate_query(query)) 
                 .with_size(size)
                 .with_seed(seed)
                 .with_added_values(added_values)
              )
-        self.experiment.set_database_config(self._database_config)
+        self.experiment.set_experiment_config(self.experiment_config)
         return self
 
 
     def with_attack_model(self, strategy):
-        if self._database_config == None:
-            raise RuntimeError("Database Config must be build before attack model.")
+        if self.experiment_config == None:
+            raise RuntimeError("Database must be configured before attack model.")
         if strategy == "maximum_likelihood":
-            attack_model = MaximumLikelihood(self._database_config)
+            attack_model = MaximumLikelihood(self.experiment_config)
             self.experiment.set_attack_model(attack_model)
         else:
             raise ValueError(f"Unknown or not implemented attack model: {strategy}")
@@ -76,7 +76,6 @@ class ExperimentBuilder(Builder):
         else:
             raise ValueError(f"Wrong query type: {query_choice}")
         return query 
-
 
     def get_experiment(self):
         return self.experiment
