@@ -9,7 +9,6 @@ class Config:
     seed: int | None
     datasource: DataSource | None
     size: int | None
-    probability: float | None
     query: Query | None
     added_values: _UnknownType | None
     mechanism: Mechanism | None
@@ -25,9 +24,6 @@ class Config:
 
     def with_size(self, size) -> "Config":
        return replace(self, size=size) 
-
-    def with_probability(self, probability) -> "Config":
-       return replace(self, probability=probability) 
 
     def with_query(self, query) -> "Config":
        return replace(self, query=query) 

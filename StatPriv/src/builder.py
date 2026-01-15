@@ -32,7 +32,7 @@ class ExperimentBuilder(Builder):
 
     def with_database(self, distribution, query, datasource, size, added_values, seed=None):
         self.experiment_config = (
-            self.experiment_config.with_probability(distribution)
+            self.experiment_config
                 .with_datasource(datasource)
                 .with_query(self.generate_query(query)) 
                 .with_size(size)
