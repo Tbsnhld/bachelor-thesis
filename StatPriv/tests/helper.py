@@ -5,6 +5,7 @@ from src.database_generator import DatabaseGenerator
 from src.query import AverageQuery, MedianQuery, SumQuery
 from models.enums_query import QueryType
 from models.enums_data_source import DataSourceType
+from models.enums_mechanism import MechanismType 
 
 
 # ------------------------
@@ -62,6 +63,7 @@ def make_config(
             datasource=None, 
             size=size, 
             probability=probability,
+            mechanism=None,
             query=None)
         .with_datasource(
             make_datasource(
@@ -101,3 +103,16 @@ def make_database_generator(config: Config):
     return DatabaseGenerator(config)
 
 
+# ------------------------
+# Mechanism factory
+# ------------------------
+
+def make_mechanism(seed, mechanism_type=MechanismType.GAUSSIAN, sample_size=None):
+    if mechanism_type == QueryType.AVERAGE:
+        return AverageQuery()
+    elif query_type == QueryType.MEDIAN:
+        return MedianQuery()
+    elif query_type == QueryType.SUM:
+        return SumQuery()
+    else:
+        raise ValueError(f"Unknown query type: {query_type}")

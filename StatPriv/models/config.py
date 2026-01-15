@@ -2,6 +2,7 @@ from dataclasses import dataclass, replace
 from numpy._typing import _UnknownType
 from src.data_source import DataSource
 from src.query import Query
+from src.mechanism import Mechanism
 
 @dataclass(frozen=True)
 class Config:
@@ -11,6 +12,7 @@ class Config:
     probability: float | None
     query: Query | None
     added_values: _UnknownType | None
+    mechanism: Mechanism | None
 
     def with_added_values(self, values) -> "Config":
        return replace(self, added_values=values) 
@@ -30,3 +32,5 @@ class Config:
     def with_query(self, query) -> "Config":
        return replace(self, query=query) 
 
+    def with_mechanism(self, mechanism) -> "Config":
+       return replace(self, mechanism=mechanism) 
