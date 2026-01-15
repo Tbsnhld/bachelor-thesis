@@ -71,12 +71,12 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
     if ask_for_seed():
         seed = enter_seed('Seed') 
 
-    datasource = datasource_generator(data_source, size, distribution, seed)
+    datasource = generate_datasource(data_source, size, distribution, seed)
     searched_values = select_values(datasource)
     return builder.with_database(distribution=distribution, query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
 
 def attackModel(builder: ExperimentBuilder):
-    if builder._database_config == None:
+    if builder.experiment_config == None:
         builder = database(builder)
 
     attackModel = inquirer.select(
@@ -100,7 +100,7 @@ def mechanism(builder: ExperimentBuilder):
     builder.with_mechanism(attackModel)
     return builder
 
-def datasource_generator(datasource_str : str, size: int, distribution: float, seeds=None):
+def generate_datasource(datasource_str : str, size: int, distribution: float, seeds=None):
     datasource=None
     if datasource_str == "Binary/Bernoulli":
         datasource = BernoulliSource(p=distribution, size=size)
