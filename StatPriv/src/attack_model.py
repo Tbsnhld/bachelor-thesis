@@ -13,9 +13,6 @@ class MaximumLikelihood(AttackModel):
         self.config = config 
 
     def run(self, observed_answer, databases) -> int:
-        datasource = self.config.datasource
-        query = self.config.query
-
         h0_database = databases[0]
         h1_database = databases[1]
         
@@ -26,7 +23,6 @@ class MaximumLikelihood(AttackModel):
             return int(0)
         elif self.likelihood_ratio(h0_li, h1_li) < 1:
             return int(1)
-        
 
     def likelihood(self, database, observed_value):
         return self.config.datasource.likelihood(database.db_config, database.db_config.query, observed_value)
