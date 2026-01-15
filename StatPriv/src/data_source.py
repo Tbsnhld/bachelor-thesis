@@ -24,6 +24,7 @@ class BernoulliSource(DataSource):
         self.p = p
         self.size = size
         self.domain = list(range(2))
+        self.value_type= int
 
     def load_data(self, rng: np.random.Generator):
         data = rng.binomial(n=1, p=self.p, size=self.size)
@@ -77,6 +78,7 @@ class TenSource(DataSource):
         self.p = p
         self.size = size
         self.domain = list(range(10))
+        self.value_type = int
 
     def variance(self):
         # Compute the mean
@@ -111,6 +113,7 @@ class GaussianSource(DataSource):
         self.std = std
         self.size = size
         self.domain = None
+        self.value_type = float
 
     def load_data(self, rng: np.random.Generator):
         data = np.round(rng.normal(loc=self.mean, scale=self.std, size=self.size), 3)
