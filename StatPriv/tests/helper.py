@@ -3,18 +3,20 @@ from models.database_configuration import DatabaseConfig
 from src.data_source import BernoulliSource, GaussianSource, TenSource
 from src.database_generator import DatabaseGenerator
 from src.query import AverageQuery, MedianQuery, SumQuery
+from models.enums_query import QueryType
+from models.enums_data_source import DataSourceType
 
 
 # ------------------------
 # Query factory
 # ------------------------
 
-def make_query(query_type: str = "Average"):
-    if query_type == "Average":
+def make_query(query_type: QueryType = QueryType.AVERAGE): 
+    if query_type == QueryType.AVERAGE:
         return AverageQuery()
-    elif query_type == "Median":
+    elif query_type == QueryType.MEDIAN:
         return MedianQuery()
-    elif query_type == "Sum":
+    elif query_type == QueryType.SUM:
         return SumQuery()
     else:
         raise ValueError(f"Unknown query type: {query_type}")

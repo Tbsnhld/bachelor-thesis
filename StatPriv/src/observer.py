@@ -25,8 +25,8 @@ class SuccessRateObserver(Observer):
     def finalize(self):
         print(f"probabilities: {self.probabilities}")
         print(f"Nr runs: {self.nr_run}")
-        print(f"Nr correctly guessed: {self.correctly_guessed}")
-        print(f"Success_rate: {self.success_rate}")
+        print(f"Nr times h0 was guessed: {self.correctly_guessed}")
+        print(f"Success_rate of h0: {self.success_rate}")
 
 
 class ExperimentGraphicObserver(Observer):

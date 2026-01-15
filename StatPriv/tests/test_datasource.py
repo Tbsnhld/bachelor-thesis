@@ -5,6 +5,7 @@ from models.database_configuration import DatabaseConfig
 from src.query import *
 import numpy as np
 from scipy import stats
+from models.enums_query import QueryType
 
 @pytest.fixture
 def rng():
@@ -62,7 +63,7 @@ class TestBernoulliSource:
         rv_2 = source.random_variable(probability=0.5, size=50)
 
         assert rv_1.mean()/50 == 0.3
-        assert rv_1.mean() == source.query_distribution(0.3, "average").mean()
+        assert rv_1.mean() == source.query_distribution(0.3, QueryType.AVERAGE).mean()
 
     def snap_observed(self):
         source = BernoulliSource(p=0.3, size=10)

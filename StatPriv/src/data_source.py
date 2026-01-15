@@ -3,7 +3,7 @@ from contextlib import AbstractAsyncContextManager
 from scipy import stats
 import numpy as np
 import pandas as pd
-from models.enums import QueryType
+from models.enums_query import QueryType
 import src.query as query_types
 
 class DataSource(ABC):
@@ -41,20 +41,27 @@ class BernoulliSource(DataSource):
     def likelihood(self, database_conf, query, observed_value):
         snapped_scaled_observed = observed_value
         if type(query) == query_types.AverageQuery or type(query) == query_types.MedianQuery:
-            snapped_scaled_observed = self.snap_observed(observed_value)
+            observed_value = self.limit_observed(observed_value, 0, 1)
+            snapped_scaled_observed = self.snap_observed(observed_value, self.size)
+        if type(query) == query_types.SumQuery:
+            observed_value = self.limit_observed(observed_value, 0, self.size)
+            snapped_scaled_observed = self.snap_observed(observed_value, 1)
         distribution_rv = self.random_variable(1, self.p)
         return query.discrete_likelihood(database_conf, distribution_rv, snapped_scaled_observed)
 
     #Because noised observed value isn't necessarily within the support which would make the pmf return 0
     #theoretically what we're doing here is going from our bernoulli mean to the a binom mean,
     #reason being there are n bernoulli trials done, which when summed up is a binomial distribution
-    def snap_observed(self, observed_value):
-        if observed_value > 1:
-            observed_value = 1
-        if observed_value < 0:
-            observed_value = 0
-        snapped_scaled_observed = (round(observed_value * self.size))
+    def snap_observed(self, observed_value, scale):
+        snapped_scaled_observed = (round(observed_value * scale))
         return snapped_scaled_observed
+
+    def limit_observed(self, observed_value, limit_min, limit_max):
+        if observed_value > limit_max:
+            observed_value = limit_max 
+        if observed_value < limit_min:
+            observed_value = limit_min 
+        return observed_value
 
     def query_distribution(self, probability, query_type, variance=None) :
         if query_type == QueryType.AVERAGE:
@@ -62,8 +69,7 @@ class BernoulliSource(DataSource):
         elif query_type == QueryType.MEDIAN:
             return self.random_variable(self.size, probability)
         elif query_type == QueryType.SUM:
-            #TODO: Check if this makes sense
-            return self.random_variable(self.size * self.size, probability)
+            return self.random_variable(self.size, probability)
 
 
 class TenSource(DataSource):
