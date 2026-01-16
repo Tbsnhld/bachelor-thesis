@@ -20,11 +20,44 @@ def ask_delta():
     return inquirer.number(
             message="Delta value: ", float_allowed=True, min_allowed=0
             ).execute()
+
 def ask_distribution():
     return inquirer.number(
         message="Distribution: ", float_allowed=True, max_allowed=1, min_allowed=0
     ).execute()
 
+def ask_distribution_each_entry(size):
+    if size <= 0:
+        raise ValueError("Size must be a positive integer")
+
+    use_custom = inquirer.confirm(
+        message="Do you want to manually set probabilities for each entry?",
+        default=False,
+    ).execute()
+
+    # Uniform distribution
+    if not use_custom:
+        return None
+
+    probabilities = []
+
+    for i in range(size):
+        prob = inquirer.text(
+            message=f"Enter probability for entry {i}",
+            validate=lambda x: validators._validate_probability(x),
+        ).execute()
+
+        probabilities.append(float(prob))
+
+    total = sum(probabilities)
+
+    if total <= 0:
+        raise ValueError("Sum of probabilities must be greater than zero")
+
+    # Normalize so they sum to 1
+    normalized = [p / total for p in probabilities]
+
+    return normalized
 
 def ask_epsilon():
     return inquirer.number(

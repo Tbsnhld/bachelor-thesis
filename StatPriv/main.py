@@ -39,7 +39,6 @@ def bounds(builder: ExperimentBuilder) -> ExperimentBuilder:
 def database(builder: ExperimentBuilder) -> ExperimentBuilder:
     database_type = co_helper.ask_database()
 
-    distribution = float(co_helper.ask_distribution())
     size = co_helper.ask_size()
     query = co_helper.ask_query()
 
@@ -47,9 +46,9 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
     if co_helper.ask_seed():
         seed = co_helper.enter_seed('Seed') 
 
-    datasource = generate_datasource(database_type, size, distribution, seed)
+    datasource = generate_datasource(database_type, size, seed)
     searched_values = select_values(datasource)
-    return builder.with_database(distribution=distribution, query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
+    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
 
 def attackModel(builder: ExperimentBuilder):
     if builder.experiment_config == None:
@@ -68,12 +67,14 @@ def mechanism(builder: ExperimentBuilder):
     builder.with_mechanism(attackModel)
     return builder
 
-def generate_datasource(datasource_str : str, size: int, distribution: float, seeds=None):
+def generate_datasource(datasource_str : str, size: int, seeds=None):
     datasource=None
     if datasource_str == "Binary/Bernoulli":
+        distribution = float(co_helper.ask_distribution())
         datasource = BernoulliSource(p=distribution, size=size)
     elif datasource_str == "Random 1-10":
-        datasource = TenSource(p=distribution, size=size)
+        distributions = co_helper.ask_distribution_each_entry(9)
+        datasource = TenSource(p=distributions, size=size)
     elif datasource_str == "Gaussian":
         mean = float(co_helper.ask_mean())
         std = float(co_helper.ask_std())
@@ -107,7 +108,6 @@ def run_experiment(builder: ExperimentBuilder):
         run_count = co_helper.ask_run_count()
         experiment = builder.get_experiment()
         observer = SuccessRateObserver()
-        observer.probabilities(experiment.config.probability)
         simulator = MonteCarlo(int(run_count), experiment)
         simulator.add_observer(observer)
         simulator.run_simulation()
