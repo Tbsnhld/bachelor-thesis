@@ -62,7 +62,6 @@ def make_config(
             added_values=added_values, 
             datasource=None, 
             size=size, 
-            probability=probability,
             mechanism=None,
             query=None)
         .with_datasource(
