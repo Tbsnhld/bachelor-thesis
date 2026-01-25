@@ -74,38 +74,46 @@ class BernoulliSource(DataSource):
 
 
 class TenSource(DataSource):
-    def __init__(self, size: int, p: (float)|None=None):
+    def __init__(self, size: int, p: list[float] | None=None):
         self.p = p
         self.size = size
         self.domain = list(range(10))
         self.value_type = int
-
-    def variance(self):
-        # Compute the mean
-        mean = np.sum(self.p * self.domain)
-        # Compute the variance
-        var = np.sum(self.p * (self.domain - mean)**2)
-        return var
+        self.new_probs: None
 
     def load_data(self, rng: np.random.Generator):
         if self.p != None:
-            data = rng.choice(a=self.domain, replace=True, p=self.p)
+            data = rng.choice(a=self.domain, replace=True, p=self.p, size=self.size)
         else:
-            data = rng.choice(a=self.domain, replace=True)
+            self.p = [1/self.size] * self.size
+            data = rng.choice(a=self.domain, replace=True, p=self.p, size=self.size)
         return data
 
     def select_value(self, data, added_value):
-        size = data.size
         new_data = data.copy()
-        new_data = np.put(new_data, [size - 1], added_value)
+        #TODO: Is this needed, or even corect? 
+        #removed_value = new_data[-1]
+        new_data[-1] = added_value
         return new_data
 
     def random_variable(self, size, probability):
-        #TODO
-        pass
+        distribution_rv = stats.rv_discrete(values=(size, probability))
+        return distribution_rv
 
-    def query_distribution(self, probability, variance=None):
-        return self.random_variable(self.size, probability);
+    def query_distribution(self, probability, query_type, variance=None) :
+        probability = self.new_probs
+        return self.random_variable(self.domain,probability);
+
+    def calculate_new_probabilities(self, added_value):
+        p_sized = [p * self.size for p in self.p]
+        p_sized[added_value] += 1
+        return [p / (self.size + 1) for p in p_sized]
+
+    def likelihood(self, database_conf, query, observed_value):
+        distribution_rv = self.random_variable(self.domain, self.p)
+        self.new_probs = self.calculate_new_probabilities(database_conf.added_value)
+        return query.discrete_likelihood(database_conf, distribution_rv, observed_value)
+
 
 class GaussianSource(DataSource):
     def __init__(self, mean: float, std: float, size: int):
@@ -132,9 +140,14 @@ class GaussianSource(DataSource):
         new_data[-1] = added_value
         return new_data
 
-    def query_distribution(self, probability, variance=None):
+    def query_distribution(self, probability, query_type, variance) :
         std = np.sqrt(variance)
-        return self.random_variable(probability, std);
+        if query_type == QueryType.AVERAGE:
+            return self.random_variable(probability, std);
+        elif query_type == QueryType.MEDIAN:
+            return self.random_variable(probability, std);
+        elif query_type == QueryType.SUM:
+            return self.random_variable(probability, std);
 
 class CSVSource(DataSource):
     def __init__(self, filepath: str, column: str | None = None):
