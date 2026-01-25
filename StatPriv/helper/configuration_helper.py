@@ -1,24 +1,30 @@
 from InquirerPy import inquirer
 import helper.validators as validators
 from src.data_source import DataSource 
+from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
+
+def ask_alpha():
+    return float(inquirer.number(
+            message="Alpha value: ", float_allowed=True, min_allowed=0, max_allowed=1
+            ).execute())
 
 def ask_attack_model():
     return inquirer.select(
             message="Which strategy does the attacker use?",
-            choices=["maximum_likelihood", "other"],
-            default="maximum_likelihood"
+            choices=[AttackModelOptions.MAX_LIKELIHOOD.value, AttackModelOptions.LIKELIHOOD_RATIO_ALPHA.value],
+            default=AttackModelOptions.MAX_LIKELIHOOD.value
             ).execute()
 
 def ask_database():
     return inquirer.select(
             message="Database Type",
-            choices=["Binary/Bernoulli", "Random 1-10", "Gaussian", "CSV"],
-            default="Binary/Bernoulli",
+            choices=[DatabaseOptions.BINARY.value, DatabaseOptions.RANDOMONETEN.value,DatabaseOptions.GAUSSIAN.value, DatabaseOptions.CSV.value],
+            default=DatabaseOptions.BINARY.value,
             ).execute()
 
 def ask_delta():
     return inquirer.number(
-            message="Delta value: ", float_allowed=True, min_allowed=0
+            message="Delta value: ", float_allowed=True, min_allowed=0.0000000001, max_allowed=1
             ).execute()
 
 def ask_distribution():
@@ -78,10 +84,39 @@ def ask_std():
         ).execute()
 
 def ask_mechanism():
+    return ask_mechanism_noise()
+
+def ask_mechanism_noise():
+    answer = inquirer.select(
+            message="Which noise mechanism should the database use?",
+            choices=[MechanismOptions.GAUSSIAN.value,MechanismOptions.LAPLACE.value,MechanismOptions.SAMPLING.value],
+            default=MechanismOptions.GAUSSIAN.value
+            ).execute()
+    if answer == MechanismOptions.SAMPLING.value:
+        return ask_mechanism_sampling()
+    return answer
+
+def ask_mechanism_sampling():
+    answer = inquirer.select(
+            message="Which subsampling mechanism should the database use?",
+            choices=[MechanismOptions.SAMPLING_REPLACEMENT.value, MechanismOptions.SAMPLING_NO_REPLACEMENT.value, MechanismOptions.POISSONSAMPLING.value, MechanismOptions.NOISE.value],
+            default=MechanismOptions.SAMPLING_REPLACEMENT.value
+            ).execute()
+    if answer ==MechanismOptions.NOISE.value:
+        return ask_mechanism_noise()
+    return answer
+
+def ask_sample_size(data_size:int | None):
+    sample_size = int(inquirer.number(
+        message="Sample size: ",
+            float_allowed=False, min_allowed=1, max_allowed=data_size
+        ).execute())
+
+def ask_selected_database():
     return inquirer.select(
-            message="Which mechanism does the database use?",
-            choices=["gaussian", "laplace", "poission"],
-            default="gaussian"
+            message="Which database contains the correct critical entry?",
+            choices=[0, 1],
+            default=0,
             ).execute()
 
 def ask_start():
@@ -94,8 +129,8 @@ def ask_start():
 def ask_query():
     return inquirer.select(
             message="Which query? ",
-            choices=["Average","Median", "Sum"],
-            default="Average",
+            choices=[QueryOptions.AVERAGE.value,QueryOptions.MEDIAN.value, QueryOptions.SUM.value],
+            default=QueryOptions.AVERAGE.value,
             ).execute()
 
 def ask_run_count():
@@ -131,11 +166,16 @@ def enter_seed(message: str | None) -> int:
 def menu():
     return inquirer.select(
                 message="Menu",
-                choices=["Database", "AttackModel", "Mechanism", "Privacy Bounds","Exit"],
-                default="Database",
+                choices=[MenuOptions.DATABASE.value, MenuOptions.ATTACKMODEL.value, MenuOptions.MECHANISM.value,MenuOptions.PRIVACY_BOUNDS.value, MenuOptions.EXIT.value],
+                default=MenuOptions.DATABASE.value,
                 ).execute()
-
-
+    
+def needs_sample_size(mechanism_name: str):
+    sample_size_list = [MechanismOptions.SAMPLING_NO_REPLACEMENT.value, MechanismOptions.SAMPLING_REPLACEMENT.value]
+    if mechanism_name in sample_size_list:
+        return True
+    return False
+    
 def pick_value(datasource: DataSource, message: str):
     if datasource.domain:
         domain_list = [str(value) for value in datasource.domain]
