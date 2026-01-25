@@ -45,19 +45,22 @@ class Experiment():
         if self.config != None:
             datagenerator = DatabaseGenerator(self.config)
             databases = datagenerator.get_databases()
-            # Für subsampling: data und query answer in apply_mechanism, weil Reihenfolge sich ändert
             datasize = self.config.size
+            selected_database = self.select_database(databases)
 
-            query_answer = self.run_query(databases) 
-            mechanismed_answer = self.mechanism.apply_mechanism(query_answer, delta=0.0, epsilon=self.epsilon, datasize=datasize)
-            attacker_decision = self.attack_model.run(mechanismed_answer, databases)
+            selected_database_data = selected_database.get_data()
+            pre_mechanism_data = self.mechanism.pre_query_mechanism(selected_database_data, datasize=datasize, )
+            selected_database.set_data(pre_mechanism_data)
+            query_answer = self.run_query(selected_database) 
+            post_mechanism_answer = self.mechanism.post_query_mechanism(query_answer, delta=self.delta, epsilon=self.epsilon, datasize=datasize)
+            attacker_decision = self.attack_model.run(post_mechanism_answer, databases)
             return self.check_decision(attacker_decision)
 
+    def select_database(self, databases):
+        return databases[self.config.selected_database] 
 
-    #selected database is always the first one
-    def run_query(self, databases):
-        selected_database = databases[0]
-        return selected_database.run_query()
+    def run_query(self, database):
+        return database.run_query()
 
     #Searched database is always the first one
     def check_decision(self, attacker_decision):

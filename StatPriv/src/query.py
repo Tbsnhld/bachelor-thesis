@@ -22,7 +22,7 @@ class AverageQuery(Query):
         adversary_mean = ((size - 1) * rv_mean + int(database_conf.added_value)) / size
         adversary_variance = self.variance(database_conf, distribution_rv) 
 
-        var = database_conf.datasource.query_distribution(adversary_mean, adversary_variance)
+        var = database_conf.datasource.query_distribution(adversary_mean, queries.QueryType.AVERAGE, adversary_variance)
         return var.pdf(observed_value) 
 
     def discrete_likelihood(self, database_conf, distribution_rv, observed_value):
@@ -30,7 +30,6 @@ class AverageQuery(Query):
         rv_mean = distribution_rv.mean() 
         adversary_mean = (round((size - 1) * rv_mean) + int(database_conf.added_value)) / size
         adversary_variance = self.variance(database_conf, distribution_rv) 
-
         var = database_conf.datasource.query_distribution(adversary_mean, queries.QueryType.AVERAGE, adversary_variance)
         return var.pmf(observed_value) 
     
@@ -50,6 +49,7 @@ class AverageQuery(Query):
 
 class MedianQuery(Query):
     def execute(self, data):
+        data.sort()
         return data[int(round(len(data)/2))]
 
     def likelihood(self, database_conf, distribution_rv, observed_value):
@@ -58,7 +58,7 @@ class MedianQuery(Query):
         adversary_mean = ((size - 1) * mean + int(database_conf.added_value)) / size 
         adversary_variance = self.variance(database_conf, distribution_rv) 
 
-        var = database_conf.datasource.query_distribution(adversary_mean, adversary_variance)
+        var = database_conf.datasource.query_distribution(adversary_mean, queries.QueryType.MEDIAN, adversary_variance)
         return var.pdf(observed_value)
 
     def discrete_likelihood(self, database_conf, distribution_rv, observed_value):
