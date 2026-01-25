@@ -2,8 +2,10 @@ from math import dist
 from InquirerPy import inquirer 
 from src.builder import ExperimentBuilder
 from src.data_source import BernoulliSource, DataSource, GaussianSource, TenSource
+from src.database import Database
 from src.simulator import MonteCarlo
 from src.observer import SuccessRateObserver 
+from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
 import helper.configuration_helper as co_helper
 
 def main():
@@ -16,16 +18,16 @@ def run_loop(builder: ExperimentBuilder):
 
         options = co_helper.menu()
 
-        if options == "Exit":
+        if options == MenuOptions.EXIT.value:
             print(f"You choose {options}")
             exit()
-        elif options == "Database":
+        elif options == MenuOptions.DATABASE.value:
             builder = database(builder)
-        elif options == "AttackModel":
-            builder = attackModel(builder)
-        elif options == "Mechanism":
+        elif options == MenuOptions.ATTACKMODEL.value:
+            builder = attack_model(builder)
+        elif options == MenuOptions.MECHANISM.value:
             builder = mechanism(builder)
-        elif options == "Privacy Bounds":
+        elif options == MenuOptions.PRIVACY_BOUNDS.value:
             builder = bounds(builder)
 
 def bounds(builder: ExperimentBuilder) -> ExperimentBuilder:
@@ -48,38 +50,47 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
 
     datasource = generate_datasource(database_type, size, seed)
     searched_values = select_values(datasource)
-    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
+    selected_database = co_helper.ask_selected_database()
+    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, selected_database=selected_database, seed=seed)
 
-def attackModel(builder: ExperimentBuilder):
+def attack_model(builder: ExperimentBuilder):
     if builder.experiment_config == None:
         builder = database(builder)
 
-    attackModel = co_helper.ask_attack_model()
-    builder.with_attack_model(attackModel)
+    attack_model = co_helper.ask_attack_model()
+    builder.with_attack_model(attack_model)
+    if attack_model == AttackModelOptions.LIKELIHOOD_RATIO_ALPHA.value:
+        alpha = co_helper.ask_alpha()
+        builder.with_alpha(alpha)
     return builder
 
 def mechanism(builder: ExperimentBuilder):
-    attackModel = co_helper.ask_mechanism()
+    mechanism = co_helper.ask_mechanism()
+    seed = None
+    sample_size = None
 
     if co_helper.ask_seed():
         seed = co_helper.enter_seed("Mechanism seed")
-        return builder.with_mechanism(attackModel, seed)
-    builder.with_mechanism(attackModel)
+
+    if co_helper.needs_sample_size(mechanism):
+        sample_size = co_helper.ask_sample_size(builder.experiment_config.size)
+    builder.with_mechanism(mechanism, seed, sample_size)
     return builder
+
 
 def generate_datasource(datasource_str : str, size: int, seeds=None):
     datasource=None
-    if datasource_str == "Binary/Bernoulli":
+    if datasource_str == DatabaseOptions.BINARY.value:
         distribution = float(co_helper.ask_distribution())
         datasource = BernoulliSource(p=distribution, size=size)
-    elif datasource_str == "Random 1-10":
+    elif datasource_str == DatabaseOptions.RANDOMONETEN.value:
         distributions = co_helper.ask_distribution_each_entry(9)
         datasource = TenSource(p=distributions, size=size)
-    elif datasource_str == "Gaussian":
+    elif datasource_str == DatabaseOptions.GAUSSIAN.value:
         mean = float(co_helper.ask_mean())
         std = float(co_helper.ask_std())
         datasource = GaussianSource(mean, std, size=size)
-    elif datasource_str == "CSV":
+    elif datasource_str == DatabaseOptions.CSV.value:
         raise ValueError(f"Data source not implemented: {datasource_str}")
     else :
         raise ValueError(f"Data source can't be generated: {datasource_str}")
@@ -87,8 +98,8 @@ def generate_datasource(datasource_str : str, size: int, seeds=None):
 
 
 def select_values(datasource: DataSource):
-    selected_value = co_helper.pick_value(datasource, "Pick critical entry value for the first database.")
-    selected_value2 = co_helper.pick_value(datasource, "Pick critical entry value for the second database.")
+    selected_value = co_helper.pick_value(datasource, "Pick critical entry value for the null hypothesis database.")
+    selected_value2 = co_helper.pick_value(datasource, "Pick critical entry value for the alternativ hypothesis database.")
     selected_values = [selected_value, selected_value2]
     return selected_values
 
