@@ -12,6 +12,7 @@ class Config:
     query: Query | None
     added_values: _UnknownType | None
     mechanism: Mechanism | None
+    selected_database: int | None
 
     def with_added_values(self, values) -> "Config":
        return replace(self, added_values=values) 
@@ -30,3 +31,6 @@ class Config:
 
     def with_mechanism(self, mechanism) -> "Config":
        return replace(self, mechanism=mechanism) 
+
+    def with_selected_database(self, selected_database) -> "Config":
+       return replace(self, selected_database=selected_database) 

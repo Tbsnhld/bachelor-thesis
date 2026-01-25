@@ -2,6 +2,7 @@ from models.config import Config
 from models.database_configuration import DatabaseConfig
 from src.data_source import BernoulliSource, GaussianSource, TenSource
 from src.database_generator import DatabaseGenerator
+from src.mechanism import GaussianNoise, LaplaceNoise, PoissonSubsampling, SubsamplingWithoutReplacement, SubsamplingWithReplacement
 from src.query import AverageQuery, MedianQuery, SumQuery
 from models.enums_query import QueryType
 from models.enums_data_source import DataSourceType
@@ -55,6 +56,7 @@ def make_config(
     mean: float | None = 150,
     std: float | None = 13,
     seed: int | None = 1234,
+    selected_database: int | None = 0
 ):
     return (
         Config(
@@ -63,7 +65,8 @@ def make_config(
             datasource=None, 
             size=size, 
             mechanism=None,
-            query=None)
+            query=None,
+            selected_database=selected_database)
         .with_datasource(
             make_datasource(
                 size=size,
@@ -107,11 +110,15 @@ def make_database_generator(config: Config):
 # ------------------------
 
 def make_mechanism(seed, mechanism_type=MechanismType.GAUSSIAN, sample_size=None):
-    if mechanism_type == QueryType.AVERAGE:
-        return AverageQuery()
-    elif query_type == QueryType.MEDIAN:
-        return MedianQuery()
-    elif query_type == QueryType.SUM:
-        return SumQuery()
+    if mechanism_type == MechanismType.GAUSSIAN:
+        return GaussianNoise()
+    if mechanism_type == MechanismType.LAPLACE:
+        return LaplaceNoise()
+    if mechanism_type == MechanismType.SUBSAMPLING:
+        return SubsamplingWithoutReplacement()
+    if mechanism_type == MechanismType.SUBSAMPLING_REPLACEMENT:
+        return SubsamplingWithReplacement()
+    if mechanism_type == MechanismType.POISSON_SUBSAMPLING:
+        return PoissonSubsampling()
     else:
         raise ValueError(f"Unknown query type: {query_type}")
