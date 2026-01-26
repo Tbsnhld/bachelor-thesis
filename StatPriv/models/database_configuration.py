@@ -25,4 +25,3 @@ class DatabaseConfig:
 
     def with_query(self, query) -> "DatabaseConfig":
        return replace(self, query=query) 
-

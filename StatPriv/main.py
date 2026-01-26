@@ -2,189 +2,128 @@ from math import dist
 from InquirerPy import inquirer 
 from src.builder import ExperimentBuilder
 from src.data_source import BernoulliSource, DataSource, GaussianSource, TenSource
+from src.database import Database
 from src.simulator import MonteCarlo
 from src.observer import SuccessRateObserver 
+from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
+import helper.configuration_helper as co_helper
 
 def main():
     builder = ExperimentBuilder()
+    run_loop(builder)
+
+def run_loop(builder: ExperimentBuilder):
     while True:
         checkFinished(builder)
 
-        options = inquirer.select(
-                message="What do you wish to configure?",
-                choices=["Database", "AttackModel", "Mechanism", "Privacy Bounds","Exit"],
-                default="Database",
-                ).execute()
+        options = co_helper.menu()
 
-        if options == "Exit":
+        if options == MenuOptions.EXIT.value:
             print(f"You choose {options}")
             exit()
-        elif options == "Database":
+        elif options == MenuOptions.DATABASE.value:
             builder = database(builder)
-        elif options == "AttackModel":
-            builder = attackModel(builder)
-        elif options == "Mechanism":
+        elif options == MenuOptions.ATTACKMODEL.value:
+            builder = attack_model(builder)
+        elif options == MenuOptions.MECHANISM.value:
             builder = mechanism(builder)
-        elif options == "Privacy Bounds":
+        elif options == MenuOptions.PRIVACY_BOUNDS.value:
             builder = bounds(builder)
 
 def bounds(builder: ExperimentBuilder) -> ExperimentBuilder:
-    epsilon = inquirer.number(
-            message="Epsilon value: ", float_allowed=True, min_allowed=0
-            ).execute()
+    epsilon = co_helper.ask_epsilon()
     builder.experiment.epsilon = float(epsilon)
-
-    delta = inquirer.number(
-            message="Delta value: ", float_allowed=True, min_allowed=0
-            ).execute()
+    delta = co_helper.ask_delta()
     builder.experiment.delta = float(delta)
 
     return builder
 
 def database(builder: ExperimentBuilder) -> ExperimentBuilder:
-    data_source = inquirer.select(
-            message="Database Type",
-            choices=["Binary/Bernoulli", "Random 1-10", "Gaussian", "CSV"],
-            default="Binary/Bernoulli",
-            ).execute()
+    database_type = co_helper.ask_database()
 
-    distribution = float(inquirer.number(
-        message="Distribution: ", float_allowed=True, max_allowed=1, min_allowed=0
-    ).execute())
-
-
-    size = int(inquirer.number(
-            message="Database size: ", float_allowed=False, max_allowed=10000, min_allowed=0
-    ).execute())
-
-    query = inquirer.select(
-            message="Which query? ",
-            choices=["Average", "Sum"],
-            default="Average",
-            ).execute()
-
+    size = co_helper.ask_size()
+    query = co_helper.ask_query()
 
     seed = None
-    if ask_for_seed():
-        seed = enter_seed('Seed') 
+    if co_helper.ask_seed():
+        seed = co_helper.enter_seed('Seed') 
 
-    datasource = datasource_generator(data_source, size, distribution, seed)
+    datasource = generate_datasource(database_type, size, seed)
     searched_values = select_values(datasource)
-    return builder.with_database(distribution=distribution, query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
+    selected_database = co_helper.ask_selected_database()
+    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, selected_database=selected_database, seed=seed)
 
-def attackModel(builder: ExperimentBuilder):
-    if builder._database_config == None:
+def attack_model(builder: ExperimentBuilder):
+    if builder.experiment_config == None:
         builder = database(builder)
 
-    attackModel = inquirer.select(
-            message="Which strategy does the attacker use?",
-            choices=["maximum_likelihood", "other"],
-            default="maximum_likelihood"
-            ).execute()
-    builder.with_attack_model(attackModel)
+    attack_model = co_helper.ask_attack_model()
+    builder.with_attack_model(attack_model)
+    if attack_model == AttackModelOptions.LIKELIHOOD_RATIO_ALPHA.value:
+        alpha = co_helper.ask_alpha()
+        builder.with_alpha(alpha)
     return builder
 
 def mechanism(builder: ExperimentBuilder):
-    attackModel = inquirer.select(
-            message="Which mechanism does the database use?",
-            choices=["gaussian", "laplace", "poission"],
-            default="gaussian"
-            ).execute()
+    mechanism = co_helper.ask_mechanism()
+    seed = None
+    sample_size = None
 
-    if ask_for_seed():
-        seed = enter_seed("Mechanism seed")
-        return builder.with_mechanism(attackModel, seed)
-    builder.with_mechanism(attackModel)
+    if co_helper.ask_seed():
+        seed = co_helper.enter_seed("Mechanism seed")
+
+    if co_helper.needs_sample_size(mechanism):
+        sample_size = co_helper.ask_sample_size(builder.experiment_config.size)
+    builder.with_mechanism(mechanism, seed, sample_size)
     return builder
 
-def datasource_generator(datasource_str : str, size: int, distribution: float, seeds=None):
+
+def generate_datasource(datasource_str : str, size: int, seeds=None):
     datasource=None
-    if datasource_str == "Binary/Bernoulli":
+    if datasource_str == DatabaseOptions.BINARY.value:
+        distribution = float(co_helper.ask_distribution())
         datasource = BernoulliSource(p=distribution, size=size)
-    elif datasource_str == "Random 1-10":
-        datasource = TenSource(p=distribution, size=size)
-    elif datasource_str == "Gaussian":
-        mean = float(inquirer.number(
-            message="Mean: ",
-            float_allowed=True,
-        ).execute())
-        std = float(inquirer.number(
-            message="Standard deviation: ",
-            float_allowed=True,
-        ).execute())
+    elif datasource_str == DatabaseOptions.RANDOMONETEN.value:
+        distributions = co_helper.ask_distribution_each_entry(9)
+        datasource = TenSource(p=distributions, size=size)
+    elif datasource_str == DatabaseOptions.GAUSSIAN.value:
+        mean = float(co_helper.ask_mean())
+        std = float(co_helper.ask_std())
         datasource = GaussianSource(mean, std, size=size)
-    elif datasource_str == "CSV":
+    elif datasource_str == DatabaseOptions.CSV.value:
         raise ValueError(f"Data source not implemented: {datasource_str}")
     else :
-        raise ValueError(f"Data source could not be generated: {datasource_str}")
+        raise ValueError(f"Data source can't be generated: {datasource_str}")
     return datasource
 
 
 def select_values(datasource: DataSource):
-        domain = datasource.domain
-        domain_list_str = [str(value) for value in domain]
-        selected_value = inquirer.select(
-                message="Critical Entry value in searched dataset",#TODO change message
-                choices=domain_list_str,
-                default=domain_list_str[0]
-                ).execute()
-
-        selected_value2 = inquirer.select(
-                message="Critical Entry value in the other dataset",
-                choices=domain_list_str,
-                default=domain_list_str[0]
-                ).execute()
-
-        selected_values = [selected_value, selected_value2]
-        return selected_values
+    selected_value = co_helper.pick_value(datasource, "Pick critical entry value for the null hypothesis database.")
+    selected_value2 = co_helper.pick_value(datasource, "Pick critical entry value for the alternativ hypothesis database.")
+    selected_values = [selected_value, selected_value2]
+    return selected_values
 
 def checkFinished(builder: ExperimentBuilder):
     if (builder.experiment.attack_model is not None and
         builder.experiment.mechanism is not None and 
         builder.experiment.config is not None and 
         builder.experiment.delta is not None):
-        fin = inquirer.select(
-                message="Run the experiment",
-                choices=["Yes", "No"],
-                default="No",
-                ).execute()
 
+        fin = co_helper.ask_start()
         if fin == "No":
             return 
         if fin == "Yes":
             run_experiment(builder)
 
 def run_experiment(builder: ExperimentBuilder):
-        run_count = inquirer.number(
-            message="How often do you wish to run the experiment?",
-            float_allowed=False,
-            min_allowed=1,
-            max_allowed=10000,
-            default=500 
-        ).execute()
+        run_count = co_helper.ask_run_count()
         experiment = builder.get_experiment()
         observer = SuccessRateObserver()
-        observer.probabilities(experiment.config.probability)
         simulator = MonteCarlo(int(run_count), experiment)
         simulator.add_observer(observer)
         simulator.run_simulation()
-        exit()
+        run_loop(builder)
 
-def ask_for_seed() -> bool:
-    seed = inquirer.select(
-            message="Do you wish to use a seed?",
-            choices=["Yes", "No"],
-            default=["No"]
-            ).execute()
-
-    if seed == "Yes":
-        return True 
-    return False 
-
-def enter_seed(message: str | None) -> int:
-    if message == None:
-        return int(inquirer.number(message=f"Seed: ").execute())
-    return int(inquirer.number(message=f"Enter seed for {message}").execute())
 
 if __name__ == "__main__":
     main()

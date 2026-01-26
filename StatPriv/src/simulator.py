@@ -21,7 +21,6 @@ class MonteCarlo(Simulator):
        self.n = count 
        self.experiment = experiment
        self.observers = []
-       self.probabilities = experiment.config.probability
 
     # returns the approximated value 
     def run_simulation(self):
