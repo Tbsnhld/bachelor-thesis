@@ -73,7 +73,7 @@ def ask_distribution_each_entry(size):
 
 def ask_epsilon():
     return inquirer.number(
-            message="Epsilon value: ", float_allowed=True, min_allowed=0
+            message="Epsilon value: ", float_allowed=True, min_allowed=0.0000000001
             ).execute()
 
 
