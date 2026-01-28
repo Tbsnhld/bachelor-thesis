@@ -35,10 +35,13 @@ class PoissonSubsampling(Subsampling):
         for i in range(datasize): 
             if bernoulli_decisions[i] == 1:
                 subsampled_data.append(data[i])
+        self.sample_size = len(subsampled_data)
 
         return subsampled_data
 
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+        if self.sample_size == 0:
+            self.sample_size = 1
         return data
 
 class SubsamplingWithoutReplacement(Subsampling):
@@ -58,7 +61,7 @@ class SubsamplingWithoutReplacement(Subsampling):
         return data
 
 class SubsamplingWithReplacement(Subsampling):
-    def __init__(self, seed=None, mechanism_config=None):
+    def __init__(self, mechanism_config, seed=None):
         self.rng = np.random.default_rng(seed)
         self.sample_size = mechanism_config[0] 
 
