@@ -73,8 +73,11 @@ def mechanism(builder: ExperimentBuilder):
         seed = co_helper.enter_seed("Mechanism seed")
 
     if co_helper.needs_sample_size(mechanism):
-        sample_size = co_helper.ask_sample_size(builder.experiment_config.size)
-    builder.with_mechanism(mechanism, seed, sample_size)
+        mechanism_config = [co_helper.ask_sample_size(builder.experiment_config.size)]
+    else :
+        mechanism_config = co_helper.mechanism_config(mechanism)
+
+    builder.with_mechanism(mechanism, mechanism_config,seed)
     return builder
 
 
