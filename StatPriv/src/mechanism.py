@@ -7,21 +7,13 @@ class Mechanism(ABC):
     def __init__(self, seed=None):
         pass
 
-    @abstractmethod
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
-        pass
-
-    @abstractmethod
-    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
-        pass
-
 class Subsampling(Mechanism):
     @abstractmethod
-    def __init__(self, seed=None, sample_size=None):
+    def __init__(self, mechanism_config, seed=None):
         pass
 
     @abstractmethod
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
         pass
 
     @abstractmethod
@@ -29,16 +21,16 @@ class Subsampling(Mechanism):
         return data
 
 class PoissonSubsampling(Subsampling):
-    def __init__(self, seed=None, sample_size=None):
+    def __init__(self, mechanism_config, seed=None):
         self.rng = np.random.default_rng(seed)
-        self.sample_size = sample_size
+        self.mechanism_config = mechanism_config
 
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
         if data.all()==None:
             raise ValueError('data is empty') 
             #throw error
 
-        bernoulli_decisions = self.rng.binomial(n=1, p=probabilities, size=datasize)
+        bernoulli_decisions = self.rng.binomial(n=1, p=self.mechanism_config[0], size=datasize)
         subsampled_data = []
         for i in range(datasize): 
             if bernoulli_decisions[i] == 1:
@@ -50,31 +42,31 @@ class PoissonSubsampling(Subsampling):
         return data
 
 class SubsamplingWithoutReplacement(Subsampling):
-    def __init__(self, seed=None, sample_size=None):
+    def __init__(self, mechanism_config, seed=None):
         self.rng = np.random.default_rng(seed)
-        self.sample_size = sample_size
+        self.sample_size = mechanism_config[0]
 
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
         if data.all()==None:
             raise ValueError('data is empty') 
             #throw error
 
-        subsampled_data = self.rng.choice(a=data, size=sample_size, replace=False, shuffle=False) 
+        subsampled_data = self.rng.choice(a=data, size=self.sample_size, replace=False, shuffle=False) 
         return subsampled_data
 
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
         return data
 
 class SubsamplingWithReplacement(Subsampling):
-    def __init__(self, seed=None, sample_size=None):
+    def __init__(self, seed=None, mechanism_config=None):
         self.rng = np.random.default_rng(seed)
-        self.sample_size = sample_size
+        self.sample_size = mechanism_config[0] 
 
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
         if data.all()==None:
             raise ValueError('data is empty') 
 
-        subsampled_data = self.rng.choice(a=data, size=sample_size, replace=True, shuffle=False) 
+        subsampled_data = self.rng.choice(a=data, size=self.sample_size, replace=True, shuffle=False) 
         return subsampled_data
 
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
@@ -85,11 +77,44 @@ class AdditiveNoise(Mechanism):
     def __init__(self, seed=None):
         pass
 
+    @abstractmethod
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        return data
+
+    @abstractmethod
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+        return data
+
+class AdditiveNoiseEpsilonDelta(Mechanism):
+    @abstractmethod
+    def __init__(self, mechanism_config, seed=None):
+        pass
+
+    @abstractmethod
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        return data
+
+    @abstractmethod
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+        return data
+
 class GaussianNoise(AdditiveNoise):
+    def __init__(self, mechanism_config, seed=None):
+        self.rng = np.random.default_rng(seed);
+        self.mechanism_config = mechanism_config
+
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        return data
+    
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+        noise = self.rng.normal(self.mechanism_config[0], scale=self.mechanism_config[1])
+        return data + noise 
+
+class GaussianNoiseEpsilonDelta(AdditiveNoise):
     def __init__(self, seed=None):
         self.rng = np.random.default_rng(seed);
 
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
         return data
     
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
@@ -104,23 +129,34 @@ class GaussianNoise(AdditiveNoise):
 
 
 class LaplaceNoise(AdditiveNoise):
+    def __init__(self, mechanism_config, seed=None):
+        self.rng = np.random.default_rng(seed);
+        self.mechanism_config = mechanism_config
+
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        return data 
+
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None) -> ndarray:
+        noise = self.rng.laplace(scale=self.mechanism_config[0]);
+        return data + noise 
+
+class LaplaceNoiseEpsilonDelta(AdditiveNoise):
     def __init__(self, seed=None):
         self.rng = np.random.default_rng(seed);
 
-    def pre_query_mechanism(self, data, datasize, sample_size=None, probabilities=None) -> ndarray:
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
         return data 
 
-    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None) -> ndarray:
         scale = self.calculate_scale(epsilon, datasize)
         noise = self.rng.laplace(scale=scale);
-        #throw error
-        #Laplace Noise
         return data + noise 
 
     def calculate_scale(self, epsilon, size):
         sensitivity = 1/size
         scale = sensitivity / epsilon
         return scale
+
 
 
 
