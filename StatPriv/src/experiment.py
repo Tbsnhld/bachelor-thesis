@@ -49,7 +49,7 @@ class Experiment():
             selected_database = self.select_database(databases)
 
             selected_database_data = selected_database.get_data()
-            pre_mechanism_data = self.mechanism.pre_query_mechanism(selected_database_data, datasize=datasize, )
+            pre_mechanism_data = self.mechanism.pre_query_mechanism(selected_database_data, datasize=datasize)
             selected_database.set_data(pre_mechanism_data)
             query_answer = self.run_query(selected_database) 
             post_mechanism_answer = self.mechanism.post_query_mechanism(query_answer, delta=self.delta, epsilon=self.epsilon, datasize=datasize)

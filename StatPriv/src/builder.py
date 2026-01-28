@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from models.config import Config
 from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
 from src.experiment import Experiment
-from src.mechanism import GaussianNoise, LaplaceNoise, PoissonSubsampling, SubsamplingWithReplacement, SubsamplingWithoutReplacement
+from src.mechanism import GaussianNoise, LaplaceNoise, GaussianNoiseEpsilonDelta, LaplaceNoiseEpsilonDelta, PoissonSubsampling, SubsamplingWithReplacement, SubsamplingWithoutReplacement
 from src.attack_model import MaximumLikelihood, LikelihoodRatioAlpha
 from src.query import AverageQuery, MedianQuery, Query, SumQuery
 
@@ -63,21 +63,27 @@ class ExperimentBuilder(Builder):
             raise ValueError(f"Unknown or not implemented attack model: {strategy}")
         return self
 
-    def with_mechanism(self, mechanism_name, sampling_size = None, seed=None):
+    def with_mechanism(self, mechanism_name, mechanism_config, seed=None):
         if mechanism_name == MechanismOptions.GAUSSIAN.value:
-            noise = GaussianNoise(seed)
+            noise = GaussianNoise(mechanism_config, seed)
             self.experiment.set_mechanism(noise)
         elif mechanism_name == MechanismOptions.LAPLACE.value:
-            noise = LaplaceNoise(seed)
+            noise = LaplaceNoise(mechanism_config, seed)
+            self.experiment.set_mechanism(noise)
+        elif mechanism_name == MechanismOptions.LAPLACE_EPSILON.value:
+            noise = LaplaceNoiseEpsilonDelta(seed)
+            self.experiment.set_mechanism(noise)
+        elif mechanism_name == MechanismOptions.GAUSSIAN_EPSILON.value:
+            noise = GaussianNoiseEpsilonDelta(seed)
             self.experiment.set_mechanism(noise)
         elif mechanism_name == MechanismOptions.SAMPLING_NO_REPLACEMENT.value:
-            mechanism = SubsamplingWithoutReplacement(seed, sampling_size)
+            mechanism = SubsamplingWithoutReplacement(mechanism_config, seed)
             self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.SAMPLING_REPLACEMENT.value:
-            mechanism = SubsamplingWithReplacement(seed, sampling_size)
+            mechanism = SubsamplingWithReplacement(mechanism_config, seed )
             self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.POISSONSAMPLING.value:
-            mechanism = PoissonSubsampling(seed)
+            mechanism = PoissonSubsampling(mechanism_config,seed)
             self.experiment.set_mechanism(mechanism)
         else: 
             raise ValueError(f"Unknown or not implemented mechanism type: {mechanism_name}")

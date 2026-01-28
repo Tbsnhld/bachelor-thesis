@@ -1,5 +1,6 @@
 from InquirerPy import inquirer
 import helper.validators as validators
+from src import mechanism
 from src.data_source import DataSource 
 from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
 
@@ -30,6 +31,11 @@ def ask_delta():
 def ask_distribution():
     return inquirer.number(
         message="Distribution: ", float_allowed=True, max_allowed=1, min_allowed=0
+    ).execute()
+
+def ask_probability():
+    return inquirer.number(
+        message="Probability: ", float_allowed=True, max_allowed=1, min_allowed=0
     ).execute()
 
 def ask_distribution_each_entry(size):
@@ -89,7 +95,11 @@ def ask_mechanism():
 def ask_mechanism_noise():
     answer = inquirer.select(
             message="Which noise mechanism should the database use?",
-            choices=[MechanismOptions.GAUSSIAN.value,MechanismOptions.LAPLACE.value,MechanismOptions.SAMPLING.value],
+            choices=[MechanismOptions.GAUSSIAN.value,
+                     MechanismOptions.LAPLACE.value,
+                     MechanismOptions.GAUSSIAN_EPSILON.value,
+                     MechanismOptions.LAPLACE_EPSILON.value,
+                     MechanismOptions.SAMPLING.value],
             default=MechanismOptions.GAUSSIAN.value
             ).execute()
     if answer == MechanismOptions.SAMPLING.value:
@@ -111,6 +121,7 @@ def ask_sample_size(data_size:int | None):
         message="Sample size: ",
             float_allowed=False, min_allowed=1, max_allowed=data_size
         ).execute())
+    return sample_size
 
 def ask_selected_database():
     return inquirer.select(
@@ -191,4 +202,28 @@ def pick_value(datasource: DataSource, message: str):
             ).execute()
 
     return datasource.value_type(value)
+
+
+def mechanism_config(mechanism):
+    if mechanism == MechanismOptions.GAUSSIAN.value:
+        return gaussian_mechanism_config()
+    elif mechanism == MechanismOptions.LAPLACE.value:
+        return laplace_mechanism_config()
+    elif mechanism == MechanismOptions.POISSONSAMPLING.value:
+        return poission_sampling_config()
+    else:
+        return []
+
+def gaussian_mechanism_config():
+    mean = float(ask_mean())
+    scale = float(ask_std())
+    return [mean, scale]
+
+def laplace_mechanism_config():
+    scale = float(ask_std())
+    return [scale]
+
+def poission_sampling_config():
+    probability = float(ask_probability())
+    return [probability]
 
