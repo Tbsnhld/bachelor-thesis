@@ -13,6 +13,8 @@ class Query(ABC):
 class AverageQuery(Query):
     #data: Generated numpy data
     def execute(self, data):
+        if len(data) == 0:
+            return 0
         return sum(data) / len(data)
 
     #data: scipy stats generated data
