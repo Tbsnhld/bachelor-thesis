@@ -215,9 +215,8 @@ def mechanism_config(mechanism):
         return []
 
 def gaussian_mechanism_config():
-    mean = float(ask_mean())
     scale = float(ask_std())
-    return [mean, scale]
+    return [scale]
 
 def laplace_mechanism_config():
     scale = float(ask_std())

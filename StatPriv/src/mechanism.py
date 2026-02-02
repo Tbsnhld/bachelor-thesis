@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from numpy import ndarray
 import numpy as np
 import math
+#import helper.graphic_assist as ga
+
 class Mechanism(ABC):
     @abstractmethod
     def __init__(self, seed=None):
@@ -110,7 +112,7 @@ class GaussianNoise(AdditiveNoise):
         return data
     
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
-        noise = self.rng.normal(self.mechanism_config[0], scale=self.mechanism_config[1])
+        noise = self.rng.normal(0, scale=self.mechanism_config[0])
         return data + noise 
 
 class GaussianNoiseEpsilonDelta(AdditiveNoise):
@@ -159,7 +161,3 @@ class LaplaceNoiseEpsilonDelta(AdditiveNoise):
         sensitivity = 1/size
         scale = sensitivity / epsilon
         return scale
-
-
-
-
