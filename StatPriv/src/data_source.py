@@ -127,14 +127,13 @@ class TenSource(DataSource):
         if type(query) == query_types.AverageQuery or type(query) == query_types.MedianQuery:
             scaled_observed = self.snap_observed(observed_value, 1)
             snapped_scaled_observed = self.limit_observed(scaled_observed, 0, max(self.domain))
+            var = self.generate_updated_var(database_conf, query)
         if type(query) == query_types.SumQuery:
             observed_value = self.limit_observed(observed_value, 0, max(self.domain) * self.size)
             snapped_scaled_observed = self.snap_observed(observed_value, 1)
-            var = self.generate_updated_var(database_conf, query)
-            new_var = self.convolve(database_conf, var)
-            return new_var.pmf(snapped_scaled_observed)
+            single_var = self.generate_updated_var(database_conf, query)
+            var = self.convolve(database_conf, single_var)
 
-        var = self.generate_updated_var(database_conf, query)
         return var.pmf(snapped_scaled_observed)
 
     def convolve(self, database_conf, distribution_rv):
@@ -168,9 +167,6 @@ class TenSource(DataSource):
 
     def threshold(self, database_conf, query, alpha):
         var = self.generate_updated_var(database_conf, query)
-
-        if query == type(query_types.SumQuery):
-            var = self.generate_updated_var(database_conf, query)
         return var.ppf(1-alpha)
 
     def snap_observed(self, observed_value, scale):
@@ -196,8 +192,8 @@ class GaussianSource(DataSource):
         data = np.round(rng.normal(loc=self.mean, scale=self.std, size=self.size), 3)
         return data
 
-    def random_variable(self, probability, std):
-        distribution_rv = stats.norm(loc=probability, scale=std)
+    def random_variable(self, loc, std):
+        distribution_rv = stats.norm(loc=loc, scale=std)
         return distribution_rv
 
     def likelihood(self, database_conf, query, observed_value):
@@ -210,14 +206,14 @@ class GaussianSource(DataSource):
         new_data[-1] = added_value
         return new_data
 
-    def query_distribution(self, probability, query_type, variance) :
+    def query_distribution(self, loc, query_type, variance) :
         std = np.sqrt(variance)
         if query_type == QueryType.AVERAGE:
-            return self.random_variable(probability, std);
+            return self.random_variable(loc, std);
         elif query_type == QueryType.MEDIAN:
-            return self.random_variable(probability, std);
+            return self.random_variable(loc, std);
         elif query_type == QueryType.SUM:
-            return self.random_variable(self.size*probability, self.size*std);
+            return self.random_variable(self.size*loc, self.size*std);
 
     def generate_updated_var(self, database_conf, query):
         distribution_rv = self.random_variable(self.mean, self.std)
@@ -228,19 +224,3 @@ class GaussianSource(DataSource):
         var = self.generate_updated_var(database_conf, query)
         return var.ppf(1-alpha)
 
-
-class CSVSource(DataSource):
-    def __init__(self, filepath: str, column: str | None = None):
-        self.filepath = filepath
-        self.column = column
-
-    def load_data(self, rng: np.random.Generator, size: int | None = None):
-        ds = pd.read_csv(self.filepath)
-        if self.column:
-            self.data = ds[self.column]
-        else:
-            self.data = ds.select_dtypes(include='number').to_numpy()
-
-        if size and len(self.data) > size:
-            self.data = self.data[:size]
-        return self.data
