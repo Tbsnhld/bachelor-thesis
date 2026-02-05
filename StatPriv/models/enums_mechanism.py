@@ -7,4 +7,5 @@ class MechanismType(Enum):
     SUBSAMPLING = type(mechanisms.SubsamplingWithoutReplacement) 
     SUBSAMPLING_REPLACEMENT = type(mechanisms.SubsamplingWithReplacement) 
     POISSON_SUBSAMPLING = type(mechanisms.PoissonSubsampling) 
+    PURE_STATISTICAL_PRIVACY = type(mechanisms.PureStatisticalPrivacy)
 
