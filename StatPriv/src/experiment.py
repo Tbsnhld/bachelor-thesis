@@ -62,10 +62,8 @@ class Experiment():
     def run_query(self, database):
         return database.run_query()
 
-    #Searched database is always the first one
     def check_decision(self, attacker_decision):
-        
-        if attacker_decision == 0:
+        if attacker_decision == self.config.selected_database:
             return True 
         else:
             return False

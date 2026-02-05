@@ -101,7 +101,7 @@ class SumQuery(Query):
         adversary_mean = ((size - 1) * rv_mean + int(database_conf.added_value)) / size
         adversary_variance = self.variance(database_conf, distribution_rv) 
 
-        var = database_conf.datasource.query_distribution(adversary_mean, adversary_variance)
+        var = database_conf.datasource.query_distribution(adversary_mean, queries.QueryType.SUM, adversary_variance)
         return var
         #return var.pdf(observed_value) 
 
