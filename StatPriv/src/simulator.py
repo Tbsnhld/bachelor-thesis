@@ -5,7 +5,7 @@ class Simulator(ABC):
        pass 
 
     @abstractmethod
-    def add_observer(self, observer):
+    def add_observers(self, observers):
         pass
 
     @abstractmethod
@@ -24,15 +24,16 @@ class MonteCarlo(Simulator):
 
     # returns the approximated value 
     def run_simulation(self):
+        self.notify(self.experiment.config)
 
         for i in range(self.n):
             turnout = self.experiment.run()
             self.notify(turnout)
         self.finalize()
-        
 
-    def add_observer(self, observer):
-        self.observers.append(observer)
+    def add_observers(self, observers):
+        for observer in observers:
+            self.observers.append(observer)
 
     def remove_observer(self, observer):
         self.observers.remove(observer)
