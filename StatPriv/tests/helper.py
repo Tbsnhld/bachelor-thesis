@@ -2,7 +2,7 @@ from models.config import Config
 from models.database_configuration import DatabaseConfig
 from src.data_source import BernoulliSource, GaussianSource, TenSource
 from src.database_generator import DatabaseGenerator
-from src.mechanism import GaussianNoise, LaplaceNoise, PoissonSubsampling, SubsamplingWithoutReplacement, SubsamplingWithReplacement
+from src.mechanism import GaussianNoise, LaplaceNoise, PoissonSubsampling, SubsamplingWithoutReplacement, SubsamplingWithReplacement, PureStatisticalPrivacy
 from src.query import AverageQuery, MedianQuery, SumQuery
 from models.enums_query import QueryType
 from models.enums_data_source import DataSourceType

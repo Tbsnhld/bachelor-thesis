@@ -9,6 +9,14 @@ class Mechanism(ABC):
     def __init__(self, seed=None):
         pass
 
+    @abstractmethod
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        pass
+
+    @abstractmethod
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+       pass 
+
 class Subsampling(Mechanism):
     @abstractmethod
     def __init__(self, mechanism_config, seed=None):
@@ -19,6 +27,29 @@ class Subsampling(Mechanism):
         pass
 
     @abstractmethod
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+        pass
+
+class AdditiveNoise(Mechanism):
+    @abstractmethod
+    def __init__(self, seed=None):
+        pass
+
+    @abstractmethod
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        pass
+
+    @abstractmethod
+    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
+        pass
+
+class PureStatisticalPrivacy(Mechanism):
+    def __init__(self, seed=None):
+        self.rng = np.random.default_rng(seed)
+
+    def pre_query_mechanism(self, data, datasize) -> ndarray:
+        return data
+
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
         return data
 
@@ -77,18 +108,6 @@ class SubsamplingWithReplacement(Subsampling):
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
         return data
 
-class AdditiveNoise(Mechanism):
-    @abstractmethod
-    def __init__(self, seed=None):
-        pass
-
-    @abstractmethod
-    def pre_query_mechanism(self, data, datasize) -> ndarray:
-        return data
-
-    @abstractmethod
-    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
-        return data
 
 class AdditiveNoiseEpsilonDelta(Mechanism):
     @abstractmethod
@@ -106,13 +125,13 @@ class AdditiveNoiseEpsilonDelta(Mechanism):
 class GaussianNoise(AdditiveNoise):
     def __init__(self, mechanism_config, seed=None):
         self.rng = np.random.default_rng(seed);
-        self.mechanism_config = mechanism_config
+        self.scale = mechanism_config[0]
 
     def pre_query_mechanism(self, data, datasize) -> ndarray:
         return data
     
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, probabilities=None) -> ndarray:
-        noise = self.rng.normal(0, scale=self.mechanism_config[0])
+        noise = self.rng.normal(0, scale=self.scale)
         return data + noise 
 
 class GaussianNoiseEpsilonDelta(AdditiveNoise):
@@ -136,13 +155,13 @@ class GaussianNoiseEpsilonDelta(AdditiveNoise):
 class LaplaceNoise(AdditiveNoise):
     def __init__(self, mechanism_config, seed=None):
         self.rng = np.random.default_rng(seed);
-        self.mechanism_config = mechanism_config
+        self.scale = mechanism_config[0]
 
     def pre_query_mechanism(self, data, datasize) -> ndarray:
         return data 
 
     def post_query_mechanism(self, data, datasize, epsilon=None, delta=None) -> ndarray:
-        noise = self.rng.laplace(scale=self.mechanism_config[0]);
+        noise = self.rng.laplace(scale=self.scale);
         return data + noise 
 
 class LaplaceNoiseEpsilonDelta(AdditiveNoise):

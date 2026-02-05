@@ -1,8 +1,15 @@
 from InquirerPy import inquirer
+from platformdirs import user_config_dir
+from pathlib import Path
+import json
 import helper.validators as validators
 from src import mechanism
 from src.data_source import DataSource 
 from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
+
+
+CONFIG_PATH = Path(user_config_dir("StatPrivCLI")) / "config.json"
+CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 def ask_alpha():
     return float(inquirer.number(
@@ -37,6 +44,31 @@ def ask_probability():
     return inquirer.number(
         message="Probability: ", float_allowed=True, max_allowed=1, min_allowed=0
     ).execute()
+
+def ask_observers():
+    choices = [
+            'CLI Attacker SuccessRate',
+            'CSV File Run'
+            ]
+
+    selection = inquirer.select(
+            message="Which observers would you like?",
+            choices=choices,
+            multiselect=True
+            ).execute()
+
+    return selection
+
+def ask_filename():
+    last_filename = load_last_filename()    
+    filename = inquirer.text(
+            message="Filename:",
+            default=last_filename
+            ).execute()
+    if filename != last_filename:
+        save_filename(filename)
+
+    return filename
 
 def ask_distribution_each_entry(size):
     if size <= 0:
@@ -95,7 +127,8 @@ def ask_mechanism():
 def ask_mechanism_noise():
     answer = inquirer.select(
             message="Which noise mechanism should the database use?",
-            choices=[MechanismOptions.GAUSSIAN.value,
+            choices=[MechanismOptions.PURE_STATISTICAL_PRIVACY.value,
+                     MechanismOptions.GAUSSIAN.value,
                      MechanismOptions.LAPLACE.value,
                      MechanismOptions.GAUSSIAN_EPSILON.value,
                      MechanismOptions.LAPLACE_EPSILON.value,
@@ -148,9 +181,9 @@ def ask_run_count():
     return inquirer.number(
             message="How often do you wish to run the experiment?",
             float_allowed=False,
-            min_allowed=1,
-            max_allowed=10000,
-            default=500 
+            min_allowed=10,
+            max_allowed=10000000,
+            default=100000 
         ).execute()
 
 def ask_seed() -> bool:
@@ -225,4 +258,12 @@ def laplace_mechanism_config():
 def poission_sampling_config():
     probability = float(ask_probability())
     return [probability]
+
+def load_last_filename():
+    if CONFIG_PATH.exists():
+        return json.loads(CONFIG_PATH.read_text()).get("last_filename", "")
+    return ""
+
+def save_filename(name):
+    CONFIG_PATH.write_text(json.dumps({"last_filename": name}))
 
