@@ -28,10 +28,10 @@ class ExperimentBuilder(Builder):
     experiment: Experiment
 
     def __init__(self):
-        self.experiment_config = Config(seed=None,datasource=None, size=None, query=None, added_values = None, mechanism=None, selected_database=None, attack_type=None, alpha=None) 
+        self.experiment_config = Config(seed=None,datasource=None, size=None, query=None, added_values = None, mechanism=None, attack_type=None, alpha=None, sensitivity=None) 
         self.experiment = Experiment()
 
-    def with_database(self, query, datasource, size, added_values, selected_database, seed=None):
+    def with_database(self, query, datasource, size, added_values, seed=None):
         self.experiment_config = (
             self.experiment_config
                 .with_datasource(datasource)
@@ -39,7 +39,6 @@ class ExperimentBuilder(Builder):
                 .with_size(size)
                 .with_seed(seed)
                 .with_added_values(added_values)
-                .with_selected_database(selected_database)
              )
         self.experiment.set_experiment_config(self.experiment_config)
         self._rebuild_dependents()
@@ -97,7 +96,6 @@ class ExperimentBuilder(Builder):
         else: 
             raise ValueError(f"Unknown or not implemented mechanism type: {mechanism_name}")
 
-        print(type(mechanism).__name__)
         self.experiment_config = (self.experiment_config.with_mechanism(mechanism))
         self.experiment.set_experiment_config(self.experiment_config)
         return self
