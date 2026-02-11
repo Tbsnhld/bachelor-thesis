@@ -74,8 +74,6 @@ class MedianQuery(Query):
 
         var = database_conf.datasource.query_distribution(adversary_mean, queries.QueryType.MEDIAN, adversary_variance)
         return var
-        #return var.pdf(observed_value)
-        #return var.pmf(observed_value) 
 
     def mean(self, database_conf, distribution_rv):
         rv_mean = distribution_rv.mean()
