@@ -75,16 +75,20 @@ class DataGeneratorObserver(Observer):
                 'Scale',
                 'Attack Model',
                 'Alpha-value',
-                'Selected Database',
                 'Success Rate',
                 'Advantage',
-                'Monte Carlo Runcount'
+                'Monte Carlo Runcount',
+                'Relative Utility Loss'
                 ]
 
         file_exists = os.path.isfile(file_path)
+        rel_util_loss = None
+        if(self.config.mechanism.util_loss):
+            rel_util_loss = self.calculate_relative_utility_loss(self.config.mechanism.util_loss, self.config.sensitivity)
 
         with open(file_path, 'a', newline='', encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
 
             #Fill data with config information
             data =  [{
@@ -92,12 +96,12 @@ class DataGeneratorObserver(Observer):
                     'Query': type(self.config.query).__name__,
                     'H0 value': self.config.added_values[0],
                     'H1 value': self.config.added_values[1],
-                    'Selected Database': self.config.selected_database,
                     'Success Rate': self.success_rate,
                     'Advantage': advantage,
                     'Monte Carlo Runcount': self.nr_run,
                     'Attack Model': self.config.attack_type,
-                    'Alpha-value': self.config.alpha
+                    'Alpha-value': self.config.alpha,
+                    'Relative Utility Loss' : rel_util_loss
                     }]
                     
             data_source_information = self.datasource_to_row(self.config.datasource)
@@ -130,6 +134,7 @@ class DataGeneratorObserver(Observer):
 
         elif type(data_source).__name__ == "TenSource":
             p = getattr(data_source, "p", None)
+            p = [round(prob, 3) for prob in p]
             base.update({
                 "p": None,
                 "mean": None,
@@ -168,6 +173,9 @@ class DataGeneratorObserver(Observer):
                 }
         return base
 
+    def calculate_relative_utility_loss(self, util_loss, sensitivity):
+        rel_util_loss = util_loss/pow(sensitivity,2)
+        return rel_util_loss
 
 
 class ExperimentGraphicObserver(Observer):
