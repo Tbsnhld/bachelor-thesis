@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from models.config import Config
 from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
 from src.experiment import Experiment
-from src.mechanism import GaussianNoise, LaplaceNoise, GaussianNoiseEpsilonDelta, LaplaceNoiseEpsilonDelta, PoissonSubsampling, SubsamplingWithReplacement, SubsamplingWithoutReplacement
+from src.mechanism import GaussianNoise, LaplaceNoise, GaussianNoiseEpsilonDelta, LaplaceNoiseEpsilonDelta, PoissonSubsampling, PureStatisticalPrivacy, SubsamplingWithReplacement, SubsamplingWithoutReplacement
 from src.attack_model import MaximumLikelihood, LikelihoodRatioAlpha
 from src.query import AverageQuery, MedianQuery, Query, SumQuery
 
@@ -28,10 +28,10 @@ class ExperimentBuilder(Builder):
     experiment: Experiment
 
     def __init__(self):
-        self.experiment_config = Config(seed=None,datasource=None, size=None, query=None, added_values = None, mechanism=None, selected_database=None) 
+        self.experiment_config = Config(seed=None,datasource=None, size=None, query=None, added_values = None, mechanism=None, attack_type=None, alpha=None, sensitivity=None) 
         self.experiment = Experiment()
 
-    def with_database(self, query, datasource, size, added_values, selected_database, seed=None):
+    def with_database(self, query, datasource, size, added_values, seed=None):
         self.experiment_config = (
             self.experiment_config
                 .with_datasource(datasource)
@@ -39,7 +39,6 @@ class ExperimentBuilder(Builder):
                 .with_size(size)
                 .with_seed(seed)
                 .with_added_values(added_values)
-                .with_selected_database(selected_database)
              )
         self.experiment.set_experiment_config(self.experiment_config)
         self._rebuild_dependents()
@@ -48,6 +47,8 @@ class ExperimentBuilder(Builder):
     def with_alpha(self, alpha):
         if self.experiment.attack_model != None:
             self.experiment.attack_model.set_alpha(alpha)
+            self.experiment_config = (self.experiment_config.with_attack_model(alpha))
+            self.experiment.set_experiment_config(self.experiment_config)
         return self
 
     def with_attack_model(self, strategy):
@@ -61,32 +62,42 @@ class ExperimentBuilder(Builder):
             self.experiment.set_attack_model(attack_model)
         else:
             raise ValueError(f"Unknown or not implemented attack model: {strategy}")
+        
+        self.experiment_config = (self.experiment_config.with_attack_model(strategy))
+        self.experiment.set_experiment_config(self.experiment_config)
         return self
 
     def with_mechanism(self, mechanism_name, mechanism_config, seed=None):
+        mechanism = None
         if mechanism_name == MechanismOptions.GAUSSIAN.value:
-            noise = GaussianNoise(mechanism_config, seed)
-            self.experiment.set_mechanism(noise)
+            mechanism = GaussianNoise(mechanism_config, seed)
+            self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.LAPLACE.value:
-            noise = LaplaceNoise(mechanism_config, seed)
-            self.experiment.set_mechanism(noise)
+            mechanism = LaplaceNoise(mechanism_config, seed)
+            self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.LAPLACE_EPSILON.value:
-            noise = LaplaceNoiseEpsilonDelta(seed)
-            self.experiment.set_mechanism(noise)
+            mechanism = LaplaceNoiseEpsilonDelta(seed)
+            self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.GAUSSIAN_EPSILON.value:
-            noise = GaussianNoiseEpsilonDelta(seed)
-            self.experiment.set_mechanism(noise)
+            mechanism = GaussianNoiseEpsilonDelta(seed)
+            self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.SAMPLING_NO_REPLACEMENT.value:
             mechanism = SubsamplingWithoutReplacement(mechanism_config, seed)
             self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.SAMPLING_REPLACEMENT.value:
-            mechanism = SubsamplingWithReplacement(mechanism_config, seed )
+            mechanism = SubsamplingWithReplacement(mechanism_config, seed)
             self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.POISSONSAMPLING.value:
             mechanism = PoissonSubsampling(mechanism_config,seed)
             self.experiment.set_mechanism(mechanism)
+        elif mechanism_name == MechanismOptions.PURE_STATISTICAL_PRIVACY.value:
+            mechanism = PureStatisticalPrivacy(seed)
+            self.experiment.set_mechanism(mechanism)
         else: 
             raise ValueError(f"Unknown or not implemented mechanism type: {mechanism_name}")
+
+        self.experiment_config = (self.experiment_config.with_mechanism(mechanism))
+        self.experiment.set_experiment_config(self.experiment_config)
         return self
 
     def generate_query(self, query_choice:str):

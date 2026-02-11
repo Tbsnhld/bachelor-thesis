@@ -19,7 +19,8 @@ class MechanismOptions(Enum):
     LAPLACE_EPSILON = "Laplace Noise epsilon-delta"
     SAMPLING_REPLACEMENT = "Subsampling with Replacement"
     SAMPLING_NO_REPLACEMENT = "Sampling without Replacement"
-    POISSONSAMPLING = "Poission Sampling"
+    POISSONSAMPLING = "Poisson Sampling"
+    PURE_STATISTICAL_PRIVACY = "Pure Statistical Privacy"
 
 class MenuOptions(Enum):
     DATABASE = "Database"

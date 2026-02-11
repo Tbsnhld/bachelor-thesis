@@ -1,10 +1,11 @@
 from math import dist
-from InquirerPy import inquirer 
+from InquirerPy import inquirer
 from src.builder import ExperimentBuilder
 from src.data_source import BernoulliSource, DataSource, GaussianSource, TenSource
 from src.database import Database
+from src.experiment import Experiment
 from src.simulator import MonteCarlo
-from src.observer import SuccessRateObserver 
+from src.observer import DataGeneratorObserver, SuccessRateObserver 
 from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
 import helper.configuration_helper as co_helper
 
@@ -50,8 +51,7 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
 
     datasource = generate_datasource(database_type, size, seed)
     searched_values = select_values(datasource)
-    selected_database = co_helper.ask_selected_database()
-    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, selected_database=selected_database, seed=seed)
+    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
 
 def attack_model(builder: ExperimentBuilder):
     if builder.experiment_config == None:
@@ -67,7 +67,6 @@ def attack_model(builder: ExperimentBuilder):
 def mechanism(builder: ExperimentBuilder):
     mechanism = co_helper.ask_mechanism()
     seed = None
-    sample_size = None
 
     if co_helper.ask_seed():
         seed = co_helper.enter_seed("Mechanism seed")
@@ -77,7 +76,7 @@ def mechanism(builder: ExperimentBuilder):
     else :
         mechanism_config = co_helper.mechanism_config(mechanism)
 
-    builder.with_mechanism(mechanism, mechanism_config,seed)
+    builder.with_mechanism(mechanism, mechanism_config, seed)
     return builder
 
 
@@ -121,12 +120,29 @@ def checkFinished(builder: ExperimentBuilder):
 def run_experiment(builder: ExperimentBuilder):
         run_count = co_helper.ask_run_count()
         experiment = builder.get_experiment()
-        observer = SuccessRateObserver()
+        
+        observers = configure_observers()
+
         simulator = MonteCarlo(int(run_count), experiment)
-        simulator.add_observer(observer)
+        simulator.add_observers(observers)
         simulator.run_simulation()
         run_loop(builder)
 
+def configure_observers():
+        observer_choices=co_helper.ask_observers()
+        observers = []
+
+        for observer in observer_choices:
+            if observer == 'CSV File Run':
+                file_name = co_helper.ask_filename() + '.csv'
+                observer = DataGeneratorObserver(file_name)
+                observers.append(observer)
+
+            if observer == 'CLI Attacker SuccessRate':
+                observer = SuccessRateObserver()
+                observers.append(observer)
+
+        return observers
 
 if __name__ == "__main__":
     main()

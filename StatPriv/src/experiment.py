@@ -1,3 +1,5 @@
+import numpy.random as npr
+from models.enums_query import QueryType
 from src.mechanism import GaussianNoise, LaplaceNoise, Mechanism
 from src.attack_model import AttackModel
 from models.config import Config
@@ -15,6 +17,8 @@ class Experiment():
 
     def set_experiment_config(self, config: Config):
         self.config = config
+        self.query = config.query
+        self.mechanism = config.mechanism
         return self
 
     def set_attack_model(self, attack_model: AttackModel):
@@ -46,26 +50,32 @@ class Experiment():
             datagenerator = DatabaseGenerator(self.config)
             databases = datagenerator.get_databases()
             datasize = self.config.size
-            selected_database = self.select_database(databases)
+            database_decision = self.random_select() 
+            selected_database = self.select_database(databases, database_decision)
 
             selected_database_data = selected_database.get_data()
             pre_mechanism_data = self.mechanism.pre_query_mechanism(selected_database_data, datasize=datasize)
             selected_database.set_data(pre_mechanism_data)
             query_answer = self.run_query(selected_database) 
-            post_mechanism_answer = self.mechanism.post_query_mechanism(query_answer, delta=self.delta, epsilon=self.epsilon, datasize=datasize)
-            attacker_decision = self.attack_model.run(post_mechanism_answer, databases)
-            return self.check_decision(attacker_decision)
 
-    def select_database(self, databases):
-        return databases[self.config.selected_database] 
+            sensitivity = self.config.sensitivity 
+            post_mechanism_answer = self.mechanism.post_query_mechanism(query_answer, delta=self.delta, epsilon=self.epsilon, datasize=datasize, sensitivity=sensitivity)
+            attacker_decision = self.attack_model.run(post_mechanism_answer, databases)
+            return self.check_decision(attacker_decision, database_decision)
+
+    def select_database(self, databases, decision):
+        return databases[decision] 
 
     def run_query(self, database):
         return database.run_query()
 
-    #Searched database is always the first one
-    def check_decision(self, attacker_decision):
-        
-        if attacker_decision == 0:
+    def check_decision(self, attacker_decision, selected_database):
+        if attacker_decision == None:
+            return None
+        if attacker_decision == selected_database:
             return True 
         else:
             return False
+
+    def random_select(self):
+        return npr.randint(0,2) 
