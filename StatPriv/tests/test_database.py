@@ -1,7 +1,7 @@
 import pytest
 from src.database import Database
 from models.enums_data_source import DataSourceType
-from tests import helper
+from helper import helper
 import numpy as np
 class TestDatabase:
 

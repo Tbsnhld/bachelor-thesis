@@ -1,7 +1,7 @@
 import pytest
 from src.attack_model import MaximumLikelihood
 import numpy as np
-from tests import helper 
+from helper import helper 
 class TestMaximumLikelihood:
     def create_max_li(self, config):
         max_li = MaximumLikelihood(config)
