@@ -5,6 +5,7 @@ import pandas as pd
 from scipy.signal import fftconvolve
 from models.enums_query import QueryType
 import src.query as query_types
+import pdb
 
 class DataSource(ABC):
     @abstractmethod
@@ -25,6 +26,7 @@ class BernoulliSource(DataSource):
         self.size = size
         self.domain = list(range(2))
         self.value_type= int
+        self.max_diff = 1
 
     def load_data(self, rng: np.random.Generator):
         data = rng.binomial(n=1, p=self.p, size=self.size)
@@ -87,11 +89,12 @@ class BernoulliSource(DataSource):
 
 class TenSource(DataSource):
     def __init__(self, size: int, p: list[float] | None=None):
-        self.p = p
+        self.p = self.normalize(p)
         self.size = size
         self.domain = list(range(10))
         self.value_type = int
         self.new_probs: None
+        self.max_diff = 9
 
     def load_data(self, rng: np.random.Generator):
         if self.p != None:
@@ -101,10 +104,20 @@ class TenSource(DataSource):
             data = rng.choice(a=self.domain, replace=True, p=self.p, size=self.size)
         return data
 
+    def normalize(self, probabilities: list[float]):
+        if probabilities != None:
+            total = sum(probabilities)
+            #round necessariy because of float issues
+            if round(total,3) < 0:
+                raise ValueError("Sum of probabilities must be atleast 1 ")
+
+            # Normalize so they sum to 1
+            probabilities = [p / total for p in probabilities]
+        return probabilities 
+
+
     def select_value(self, data, added_value):
         new_data = data.copy()
-        #TODO: Is this needed, or even corect? 
-        #removed_value = new_data[-1]
         new_data[-1] = added_value
         return new_data
 
@@ -185,12 +198,14 @@ class GaussianSource(DataSource):
         self.mean = mean
         self.std = std
         self.size = size
-        self.domain = None
         self.value_type = float
+        self.k_sigma_bound = 4 
+        self.max_diff = 2*(self.std * self.k_sigma_bound)  
 
     def load_data(self, rng: np.random.Generator):
         data = np.round(rng.normal(loc=self.mean, scale=self.std, size=self.size), 3)
-        return data
+        a, b = self.mean - self.k_sigma_bound * self.std, self.mean + self.k_sigma_bound * self.std
+        return np.clip(data, a, b)
 
     def random_variable(self, loc, std):
         distribution_rv = stats.norm(loc=loc, scale=std)

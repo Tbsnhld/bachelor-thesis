@@ -93,13 +93,6 @@ def ask_distribution_each_entry(size):
 
         probabilities.append(float(prob))
 
-    total = sum(probabilities)
-
-    if total <= 0:
-        raise ValueError("Sum of probabilities must be greater than zero")
-
-    # Normalize so they sum to 1
-    normalized = [p / total for p in probabilities]
 
     return normalized
 
