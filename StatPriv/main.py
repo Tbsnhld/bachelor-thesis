@@ -1,5 +1,5 @@
 from math import dist
-from InquirerPy import inquirer 
+from InquirerPy import inquirer
 from src.builder import ExperimentBuilder
 from src.data_source import BernoulliSource, DataSource, GaussianSource, TenSource
 from src.database import Database
@@ -51,8 +51,7 @@ def database(builder: ExperimentBuilder) -> ExperimentBuilder:
 
     datasource = generate_datasource(database_type, size, seed)
     searched_values = select_values(datasource)
-    selected_database = co_helper.ask_selected_database()
-    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, selected_database=selected_database, seed=seed)
+    return builder.with_database(query=query, size=size, datasource=datasource, added_values=searched_values, seed=seed)
 
 def attack_model(builder: ExperimentBuilder):
     if builder.experiment_config == None:
