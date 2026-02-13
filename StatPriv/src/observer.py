@@ -83,8 +83,13 @@ class DataGeneratorObserver(Observer):
 
         file_exists = os.path.isfile(file_path)
         rel_util_loss = None
-        if(self.config.mechanism.util_loss):
-            rel_util_loss = self.calculate_relative_utility_loss(self.config.mechanism.util_loss, self.config.sensitivity)
+        util_loss = getattr(self.config.mechanism, "util_loss", None)
+        if util_loss:
+            rel_util_loss = self.calculate_relative_utility_loss(
+                self.config.mechanism.util_loss, 
+                self.config.sensitivity
+            )
+            
 
         with open(file_path, 'a', newline='', encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
