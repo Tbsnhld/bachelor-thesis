@@ -139,23 +139,23 @@ class GaussianNoise(AdditiveNoise):
         noise = self.rng.normal(0, scale=self.scale)
         return data + noise 
 
-class GaussianNoiseEpsilonDelta(AdditiveNoise):
-    def __init__(self, seed=None):
-        self.rng = np.random.default_rng(seed);
-        self.util_loss = None
-
-    def pre_query_mechanism(self, data, datasize) -> ndarray:
-        return data
-    
-    def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, sensitivity=None) -> ndarray:
-        scale = self.calculate_scale(epsilon, datasize, delta, sensitivity)
-        noise = self.rng.normal(0, scale=scale)
-        return data + noise 
-
-    def calculate_scale(self, epsilon, size, delta, sensitivity):
-        scale = (2*(math.log(1.25/delta))*(math.pow(sensitivity,2)))/math.pow(epsilon,2)
-        self.util_loss = scale*scale
-        return scale
+#class GaussianNoiseEpsilonDelta(AdditiveNoise):
+#   def __init__(self, seed=None):
+#       self.rng = np.random.default_rng(seed);
+#       self.util_loss = None
+#
+#   def pre_query_mechanism(self, data, datasize) -> ndarray:
+#       return data
+#   
+#   def post_query_mechanism(self, data, datasize, epsilon=None, delta=None, sensitivity=None) -> ndarray:
+#       scale = self.calculate_scale(epsilon, datasize, delta, sensitivity)
+#       noise = self.rng.normal(0, scale=scale)
+#       return data + noise 
+#
+#   def calculate_scale(self, epsilon, size, delta, sensitivity):
+#       scale = (2*(math.log(1.25/delta))*(math.pow(sensitivity,2)))/math.pow(epsilon,2)
+#       self.util_loss = scale*scale
+#       return scale
 
 
 class LaplaceNoise(AdditiveNoise):

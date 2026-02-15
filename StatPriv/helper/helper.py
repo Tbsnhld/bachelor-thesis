@@ -11,7 +11,6 @@ from src.database_generator import DatabaseGenerator
 from src.experiment import Experiment
 from src.mechanism import (
     GaussianNoise,
-    GaussianNoiseEpsilonDelta,
     LaplaceNoise,
     LaplaceNoiseEpsilonDelta,
     PoissonSubsampling,
@@ -149,8 +148,6 @@ def make_mechanism(mechanism_config, mechanism_type=MechanismType.GAUSSIAN, seed
         return SubsamplingWithoutReplacement(mechanism_config, seed)
     if mechanism_type == MechanismType.LAPLACE_EPSILON:
        return LaplaceNoiseEpsilonDelta(seed)
-    if mechanism_type == MechanismType.GAUSSIAN_EPSILON:
-       return GaussianNoiseEpsilonDelta(seed)
     if mechanism_type == MechanismType.SUBSAMPLING_REPLACEMENT:
         return SubsamplingWithReplacement(mechanism_config, seed)
     if mechanism_type == MechanismType.POISSON_SUBSAMPLING:

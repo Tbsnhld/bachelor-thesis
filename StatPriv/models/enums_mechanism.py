@@ -3,9 +3,8 @@ import src.mechanism as mechanisms
 
 class MechanismType(Enum):
     GAUSSIAN =mechanisms.GaussianNoise 
-    GAUSSIAN_EPSILON = mechanisms.GaussianNoiseEpsilonDelta
     LAPLACE = mechanisms.LaplaceNoise 
-    LAPLACE_EPSILON = mechanisms.GaussianNoiseEpsilonDelta
+    LAPLACE_EPSILON = mechanisms.LaplaceNoiseEpsilonDelta
     SUBSAMPLING = mechanisms.SubsamplingWithoutReplacement 
     SUBSAMPLING_REPLACEMENT = mechanisms.SubsamplingWithReplacement
     POISSON_SUBSAMPLING = mechanisms.PoissonSubsampling 

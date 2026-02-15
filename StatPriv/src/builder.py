@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from models.config import Config
 from models.enums_configuration_options import AttackModelOptions, DatabaseOptions, MechanismOptions, MenuOptions, QueryOptions
 from src.experiment import Experiment
-from src.mechanism import GaussianNoise, LaplaceNoise, GaussianNoiseEpsilonDelta, LaplaceNoiseEpsilonDelta, PoissonSubsampling, PureStatisticalPrivacy, SubsamplingWithReplacement, SubsamplingWithoutReplacement
+from src.mechanism import GaussianNoise, LaplaceNoise, LaplaceNoiseEpsilonDelta, PoissonSubsampling, PureStatisticalPrivacy, SubsamplingWithReplacement, SubsamplingWithoutReplacement
 from src.attack_model import MaximumLikelihood, LikelihoodRatioAlpha
 from src.query import AverageQuery, MedianQuery, Query, SumQuery
 
@@ -77,9 +77,6 @@ class ExperimentBuilder(Builder):
             self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.LAPLACE_EPSILON.value:
             mechanism = LaplaceNoiseEpsilonDelta(seed)
-            self.experiment.set_mechanism(mechanism)
-        elif mechanism_name == MechanismOptions.GAUSSIAN_EPSILON.value:
-            mechanism = GaussianNoiseEpsilonDelta(seed)
             self.experiment.set_mechanism(mechanism)
         elif mechanism_name == MechanismOptions.SAMPLING_NO_REPLACEMENT.value:
             mechanism = SubsamplingWithoutReplacement(mechanism_config, seed)
