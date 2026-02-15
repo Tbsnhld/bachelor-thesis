@@ -214,7 +214,8 @@ def needs_sample_size(mechanism_name: str):
     return False
     
 def pick_value(datasource: DataSource, message: str):
-    if datasource.domain:
+    domain = getattr(datasource, "domain", None)
+    if domain:
         domain_list = [str(value) for value in datasource.domain]
         return inquirer.select(
                 message=message,#TODO change message
