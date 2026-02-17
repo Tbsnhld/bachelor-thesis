@@ -199,7 +199,7 @@ class GaussianSource(DataSource):
         self.std = std
         self.size = size
         self.value_type = float
-        self.k_sigma_bound = 4 
+        self.k_sigma_bound = 3
         self.max_diff = 2*(self.std * self.k_sigma_bound)  
 
     def load_data(self, rng: np.random.Generator):
