@@ -29,7 +29,7 @@ class MonteCarlo(Simulator):
         for i in range(self.n):
             turnout = self.experiment.run()
             self.notify(turnout)
-        self.finalize()
+        return self.finalize()
 
     def add_observers(self, observers):
         for observer in observers:
@@ -43,6 +43,11 @@ class MonteCarlo(Simulator):
             observer.update(info)
 
     def finalize(self):
+        answer = None
         for observer in self.observers:
-            observer.finalize()
+            data = observer.finalize()
+            if data is not None:
+                answer = data
+        return answer
+
 
