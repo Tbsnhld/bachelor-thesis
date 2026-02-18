@@ -97,6 +97,13 @@ class ExperimentBuilder(Builder):
         self.experiment.set_experiment_config(self.experiment_config)
         return self
 
+    def with_bounds(self, epsilon, delta):
+        self.experiment.set_epsilon(epsilon)
+        self.experiment.set_delta(delta)
+        self.experiment_config = (self.experiment_config.with_bounds(epsilon=epsilon, delta=delta))
+        self.experiment.set_experiment_config(self.experiment_config)
+        return self
+
     def generate_query(self, query_choice:str):
         if query_choice == QueryOptions.AVERAGE.value:
             query = AverageQuery()

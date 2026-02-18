@@ -16,6 +16,8 @@ class Config:
     attack_type: str | None
     alpha: float | None
     sensitivity: float | None
+    epsilon: float | None 
+    delta: float | None
 
     def with_added_values(self, values) -> "Config":
         return replace(self, added_values=values) 
@@ -46,6 +48,9 @@ class Config:
 
     def with_alpha(self, alpha) -> "Config":
         return replace(self, alpha=alpha)
+
+    def with_bounds(self, epsilon, delta) -> "Config":
+        return replace(self, epsilon=epsilon, delta=delta)
 
     def calculate_sensitivity(self, query: Query):
         if query != None and self.datasource != None and self.size != None:

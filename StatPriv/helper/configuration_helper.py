@@ -32,7 +32,7 @@ def ask_database():
 
 def ask_delta():
     return inquirer.number(
-            message="Delta value: ", float_allowed=True, min_allowed=0.0000000001, max_allowed=1
+            message="Delta value: ", float_allowed=True, min_allowed=0, max_allowed=1
             ).execute()
 
 def ask_distribution():
