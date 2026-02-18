@@ -32,10 +32,9 @@ def run_loop(builder: ExperimentBuilder):
             builder = bounds(builder)
 
 def bounds(builder: ExperimentBuilder) -> ExperimentBuilder:
-    epsilon = co_helper.ask_epsilon()
-    builder.experiment.epsilon = float(epsilon)
-    delta = co_helper.ask_delta()
-    builder.experiment.delta = float(delta)
+    epsilon = float(co_helper.ask_epsilon())
+    delta = float(co_helper.ask_delta())
+    builder = builder.with_bounds(epsilon=epsilon, delta=delta)
 
     return builder
 
