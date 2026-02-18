@@ -73,9 +73,15 @@ class Experiment():
         if attacker_decision == None:
             return None
         if attacker_decision == selected_database:
-            return True 
+            if attacker_decision == 0:
+                return int(0) #True positive
+            else:
+                return int(1) #True negative
         else:
-            return False
+            if attacker_decision == 0:
+                return int(2) #False negative
+            else:
+                return int(3) #False positive
 
     def random_select(self):
         return npr.randint(0,2) 
