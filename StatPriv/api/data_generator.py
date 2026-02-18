@@ -1,47 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from typing import Any, Callable, Iterable, List
-import inspect
+from dataclasses import replace
+from typing import Any, Iterable
 
-from helper import helper as h
+from src import factory as h
 from models.enums_configuration_options import AttackModelOptions, MechanismOptions, QueryOptions, DatabaseOptions
 from models.enums_data_source import DataSourceType
 from models.enums_mechanism import MechanismType
 from models.enums_query import QueryType
+from models.api_config import ExperimentRunConfig, SweepResult
 from src.observer import DataGeneratorObserver, SuccessRateObserver
-
-
-@dataclass(frozen=True)
-class ExperimentRunConfig:
-    datasource: Any | None
-    datasource_factory: Callable[..., Any] | None
-    size: int
-    query: Any | None
-    h0_value: Any
-    h1_value: Any 
-    attack_model: Any | None
-    mechanism: Any | None
-    mechanism_config: list[Any] | None
-    alpha: float | None
-    epsilon: float | None
-    delta: float | None
-    seed: int | None
-    mechanism_seed: int | None
-    datasource_type: str | None = None
-    probability: float | None = None
-    probabilities: list[float] | None = None
-    mean: float | None = None
-    std: float | None = None
-
-
-@dataclass(frozen=True)
-class SweepResult:
-    varied_name: str
-    varied_value: Any
-    success_rate: float
-    advantage: float
-
 
 def _resolve_query(query: Any | None):
     if query is None:
@@ -67,7 +35,6 @@ def _resolve_mechanism_type(mechanism: Any | None) -> MechanismType:
     if isinstance(mechanism, MechanismOptions):
         mapping = {
             MechanismOptions.GAUSSIAN: MechanismType.GAUSSIAN,
-            MechanismOptions.GAUSSIAN_EPSILON: MechanismType.GAUSSIAN_EPSILON,
             MechanismOptions.LAPLACE: MechanismType.LAPLACE,
             MechanismOptions.LAPLACE_EPSILON: MechanismType.LAPLACE_EPSILON,
             MechanismOptions.SAMPLING_NO_REPLACEMENT: MechanismType.SUBSAMPLING,
@@ -80,7 +47,6 @@ def _resolve_mechanism_type(mechanism: Any | None) -> MechanismType:
     if isinstance(mechanism, str):
         by_value = {
             MechanismOptions.GAUSSIAN.value: MechanismType.GAUSSIAN,
-            MechanismOptions.GAUSSIAN_EPSILON.value: MechanismType.GAUSSIAN_EPSILON,
             MechanismOptions.LAPLACE.value: MechanismType.LAPLACE,
             MechanismOptions.LAPLACE_EPSILON.value: MechanismType.LAPLACE_EPSILON,
             MechanismOptions.SAMPLING_NO_REPLACEMENT.value: MechanismType.SUBSAMPLING,
@@ -109,7 +75,7 @@ def _build_datasource(cfg: ExperimentRunConfig):
         raise ValueError(f"No valid Datasource: {cfg.datasource}")
 
 
-def build_experiment(run_config: ExperimentRunConfig):
+def _build_experiment(run_config: ExperimentRunConfig):
     config = h.make_config(
         added_values=[run_config.h0_value, run_config.h1_value],
         size=run_config.size,
@@ -172,7 +138,7 @@ def run_monte_carlo_sweep(
 
     for value in values:
         run_cfg = replace(base_config, **{varied_name: value})
-        experiment = build_experiment(run_cfg)
+        experiment = _build_experiment(run_cfg)
 
 
         observers = []
@@ -182,7 +148,7 @@ def run_monte_carlo_sweep(
 
 
         simulator = h.make_simulator(run_count, experiment, observers=observers)
-        simulator.run_simulation()
+        data = simulator.run_simulation()
 
         success_rate = _success_rate_from_observers(observers)
         advantage = abs(success_rate - 0.5) if success_rate == success_rate else float("nan")
@@ -192,7 +158,27 @@ def run_monte_carlo_sweep(
                 varied_value=value,
                 success_rate=success_rate,
                 advantage=advantage,
+                data=data
             )
         )
 
     return results
+
+def run_once(
+        config: ExperimentRunConfig,
+        run_count: int,
+        observer_filename: str | None = None,
+        ):
+        experiment = _build_experiment(config)
+
+
+        observers = []
+        observers.append(SuccessRateObserver())
+        if observer_filename != None:
+            observers.append(DataGeneratorObserver(f"{observer_filename}.csv"))
+
+
+        simulator = h.make_simulator(run_count, experiment, observers=observers)
+        data = simulator.run_simulation()
+
+        return data 
